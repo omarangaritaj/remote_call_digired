@@ -1,0 +1,26 @@
+version: '3.8'
+
+services:
+  gpio-controller:
+    build: .
+    container_name: raspberry-gpio-controller
+    restart: always
+    ports:
+      - "8000:8000"
+    environment:
+      - API_URL=${API_URL}
+      - API_KEY=${API_KEY}
+      - API_TOKEN=${API_TOKEN}
+      - DEVICE_ID=${DEVICE_ID:-raspberry-pi-001}
+    privileged: true
+    volumes:
+      - /sys:/sys:ro
+      - /dev/mem:/dev/mem
+    devices:
+      - /dev/gpiomem:/dev/gpiomem
+    networks:
+      - gpio-network
+
+networks:
+  gpio-network:
+    driver: bridge
