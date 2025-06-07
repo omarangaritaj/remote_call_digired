@@ -12,12 +12,15 @@ services:
       - API_KEY=${API_KEY}
       - API_TOKEN=${API_TOKEN}
       - DEVICE_ID=${DEVICE_ID:-raspberry-pi-001}
-    privileged: true
+    privileged: true  # Necesario para acceso a GPIO
     volumes:
-      - /sys:/sys:ro
-      - /dev/mem:/dev/mem
+      - /sys:/sys
+      - /dev:/dev
     devices:
       - /dev/gpiomem:/dev/gpiomem
+      - /dev/mem:/dev/mem
+    group_add:
+      - gpio
     networks:
       - gpio-network
 

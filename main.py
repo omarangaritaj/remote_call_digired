@@ -47,19 +47,34 @@ class GPIOController:
 
     def setup_gpio(self):
         """Configuración inicial de GPIO"""
-        GPIO.setmode(GPIO.BCM)
-        GPIO.setwarnings(False)
+        try:
+            GPIO.setmode(GPIO.BCM)
+            GPIO.setwarnings(False)
 
-        # Configurar pines de interruptores como entrada con pull-up
-        for pin in SWITCH_PINS:
-            GPIO.setup(pin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+            # Configurar pines de interruptores como entrada con pull-up
+            for pin in SWITCH_PINS:
+                GPIO.setup(pin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+                logger.info(f"Interruptor configurado en GPIO {pin}")
 
-        # Configurar pines de bombillos como salida
-        for pin in BULB_PINS:
-            GPIO.setup(pin, GPIO.OUT)
-            GPIO.output(pin, GPIO.LOW)
+            # Configurar pines de bombillos como salida
+            for pin in BULB_PINS:
+                GPIO.setup(pin, GPIO.OUT)
+                GPIO.output(pin, GPIO.LOW)
+                logger.info(f"Bombillo configurado en GPIO {pin}")
 
-        logger.info("GPIO configurado correctamente")
+            logger.info("GPIO configurado correctamente")
+
+        except RuntimeError as e:
+            logger.error(f"Error configurando GPIO: {e}")
+            logger.error("Posibles soluciones:")
+            logger.error("1. Ejecutar contenedor con permisos privilegiados")
+            logger.error("2. Verificar que /dev/gpiomem y /dev/mem tengan permisos correctos")
+            logger.error("3. Agregar usuario al grupo 'gpio'")
+            logger.error("4. Ejecutar script fix_gpio_permissions.sh")
+            raise
+        except Exception as e:
+            logger.error(f"Error inesperado configurando GPIO: {e}")
+            raise
 
     async def turn_on_bulb(self, bulb_index: int):
         """Enciende un bombillo por 2 segundos"""
