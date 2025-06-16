@@ -226,8 +226,8 @@ async def test_switch(switch_index: int):
     if not gpio_controller:
         raise HTTPException(status_code=500, detail="GPIO Controller not initialized")
 
-    await gpio_controller.handle_switch_press(switch_index)
-    return {"message": f"Switch {switch_index + 1} test completed"}
+    test = await gpio_controller.handle_switch_press(switch_index)
+    return {"message": f"Switch {switch_index + 1} test completed successfully", "result": test}
 
 @app.get("/health")
 async def health_check():
