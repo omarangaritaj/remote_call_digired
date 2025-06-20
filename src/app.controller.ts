@@ -5,8 +5,8 @@ import { GPIOService } from './gpio/gpio.service';
 @Controller()
 export class AppController {
   constructor(
-      private readonly appService: AppService,
-      private readonly gpioService: GPIOService,
+    private readonly appService: AppService,
+    private readonly gpioService: GPIOService,
   ) {}
 
   @Get()

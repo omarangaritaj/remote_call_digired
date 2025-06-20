@@ -17,12 +17,6 @@ import { ApiService } from './api/api.service';
     }),
   ],
   controllers: [AppController],
-  providers: [
-    AppService,
-    PrismaService,
-    GPIOService,
-    UserService,
-    ApiService,
-  ],
+  providers: [AppService, PrismaService, GPIOService, UserService, ApiService],
 })
 export class AppModule {}

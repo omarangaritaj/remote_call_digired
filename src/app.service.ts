@@ -7,8 +7,8 @@ export class AppService implements OnModuleInit {
   private readonly logger = new Logger(AppService.name);
 
   constructor(
-      private readonly userService: UserService,
-      private readonly gpioService: GPIOService,
+    private readonly userService: UserService,
+    private readonly gpioService: GPIOService,
   ) {}
 
   async onModuleInit() {
@@ -28,7 +28,6 @@ export class AppService implements OnModuleInit {
       this.logger.log('✅ GPIO monitoring started');
 
       this.logger.log('🎉 Application initialized successfully');
-
     } catch (error) {
       this.logger.error('❌ Failed to initialize application:', error);
       throw error;
