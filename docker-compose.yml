@@ -1,0 +1,31 @@
+version: '3.8'
+
+services:
+  gpio-controller:
+    build: .
+    container_name: raspberry-gpio-controller-nestjs
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=${NODE_ENV:-production}
+      - API_URL=${API_URL}
+      - API_ENDPOINT=${API_ENDPOINT}
+      - DEVICE_ID=${DEVICE_ID:-raspberry-pi-001}
+      - DATABASE_URL=file:./data/dev.db
+    privileged: true  # Necessary for GPIO access
+    volumes:
+      - /sys:/sys
+      - /dev:/dev
+      - ./data:/app/data  # Persist SQLite database
+    devices:
+      - /dev/gpiomem:/dev/gpiomem
+      - /dev/mem:/dev/mem
+    group_add:
+      - gpio
+    networks:
+      - gpio-network
+
+networks:
+  gpio-network:
+    driver: bridge
