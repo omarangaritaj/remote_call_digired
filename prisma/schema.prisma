@@ -11,9 +11,10 @@ datasource db {
 }
 
 model User {
-  id          String   @id
+  id          Int      @id @default(autoincrement())
+  userId      String   @unique
   branchId    String
-  location    String // JSON string that will be parsed
+  location    String   // JSON string that will be parsed
   accessToken String
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
