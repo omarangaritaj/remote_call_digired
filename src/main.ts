@@ -1,8 +1,33 @@
 import { NestFactory } from '@nestjs/core';
+import { ValidationPipe, Logger } from '@nestjs/common';
 import { AppModule } from './app.module';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
-  await app.listen(process.env.PORT ?? 3000);
+  const logger = new Logger('Bootstrap');
+
+  try {
+    const app = await NestFactory.create(AppModule);
+
+    // Enable validation pipes
+    app.useGlobalPipes(new ValidationPipe({
+      whitelist: true,
+      transform: true,
+    }));
+
+    // Enable CORS if needed
+    app.enableCors();
+
+    const port = process.env.PORT || 3000;
+    await app.listen(port);
+
+    logger.log(`🚀 GPIO Controller running on port ${port}`);
+    logger.log(`📊 Health check available at: http://localhost:${port}/health`);
+    logger.log(`📈 Status endpoint available at: http://localhost:${port}/status`);
+
+  } catch (error) {
+    logger.error('❌ Failed to start application:', error);
+    process.exit(1);
+  }
 }
+
 bootstrap();
