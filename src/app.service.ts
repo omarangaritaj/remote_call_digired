@@ -16,7 +16,7 @@ export class AppService implements OnModuleInit {
 
     try {
       // Initialize GPIO
-      // await this.gpioService.initialize();
+      await this.gpioService.initialize();
       this.logger.log('✅ GPIO initialized successfully');
 
       // Fetch and store users from API
@@ -24,7 +24,7 @@ export class AppService implements OnModuleInit {
       this.logger.log('✅ Users synchronized with API');
 
       // Start GPIO monitoring
-      // this.gpioService.startMonitoring();
+      this.gpioService.startMonitoring();
       this.logger.log('✅ GPIO monitoring started');
 
       this.logger.log('🎉 Application initialized successfully');
