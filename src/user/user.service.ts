@@ -12,9 +12,8 @@ export interface UserLocation {
 
 export interface ApiUser {
   id: string;
-  branchId: string;
-  location: UserLocation;
   accessToken: string;
+  location: UserLocation;
   pin: number;
 }
 
@@ -63,12 +62,10 @@ export class UserService {
       where: { userId: apiUser.id },
       update: {
         accessToken: apiUser.accessToken,
-        branchId: apiUser.branchId,
         location: locationString,
       },
       create: {
         accessToken: apiUser.accessToken,
-        branchId: apiUser.branchId,
         location: locationString,
         switchInput: SWITCH_PINS[apiUser.pin - 1 || index],
         userId: apiUser.id,

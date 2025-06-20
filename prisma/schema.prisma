@@ -13,7 +13,6 @@ datasource db {
 model User {
   id          Int      @id @default(autoincrement())
   userId      String   @unique
-  branchId    String
   location    String // JSON string that will be parsed
   accessToken String
   switchInput Int
