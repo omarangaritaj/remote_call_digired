@@ -1,8 +1,8 @@
-import {Injectable, Logger} from '@nestjs/common';
-import {PrismaService} from '../prisma/prisma.service';
-import {ApiService} from '../api/api.service';
-import {SWITCH_PINS} from "../constants/pin.constants";
-import {User} from "@prisma/client";
+import { Injectable, Logger } from '@nestjs/common';
+import { PrismaService } from '../prisma/prisma.service';
+import { ApiService } from '../api/api.service';
+import { SWITCH_PINS } from '../constants/pin.constants';
+import { User } from '@prisma/client';
 
 export interface UserLocation {
   id: string;
@@ -29,8 +29,7 @@ export class UserService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly apiService: ApiService,
-  ) {
-  }
+  ) {}
 
   async fetchAndStoreUsers(): Promise<void> {
     try {
@@ -46,7 +45,7 @@ export class UserService {
       this.logger.log(`📥 Received ${apiResponse.users.length} users from API`);
 
       for (const apiUser of apiResponse.users) {
-        const index = apiResponse.users.findIndex((user) => user.id === apiUser.id);
+        const index = apiResponse.users.findIndex(user => user.id === apiUser.id);
         await this.upsertUser(apiUser, index);
       }
 
@@ -61,7 +60,7 @@ export class UserService {
     const locationString = JSON.stringify(apiUser.location);
 
     const user = await this.prisma.user.upsert({
-      where: {userId: apiUser.id},
+      where: { userId: apiUser.id },
       update: {
         accessToken: apiUser.accessToken,
         branchId: apiUser.branchId,
@@ -71,7 +70,7 @@ export class UserService {
         accessToken: apiUser.accessToken,
         branchId: apiUser.branchId,
         location: locationString,
-        switchInput: SWITCH_PINS[(apiUser.pin - 1) || index],
+        switchInput: SWITCH_PINS[apiUser.pin - 1 || index],
         userId: apiUser.id,
       },
     });
@@ -79,10 +78,9 @@ export class UserService {
     this.logger.log(`👤 User ${user?.userId} synchronized`);
   }
 
-
   async getUser(switchIndex: number) {
     try {
-      const user = await this.prisma.user.findFirst({where: { switchInput: switchIndex}});
+      const user = await this.prisma.user.findFirst({ where: { switchInput: switchIndex } });
 
       if (!user) {
         this.logger.error('No users');

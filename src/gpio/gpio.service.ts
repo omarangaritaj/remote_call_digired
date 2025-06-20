@@ -2,7 +2,7 @@ import { Injectable, Logger, OnModuleDestroy } from '@nestjs/common';
 import { Gpio } from 'onoff';
 import { ApiService } from '../api/api.service';
 import { UserService } from '../user/user.service';
-import {BULB_PINS, SWITCH_PINS} from "../constants/pin.constants";
+import { BULB_PINS, SWITCH_PINS } from '../constants/pin.constants';
 
 @Injectable()
 export class GPIOService implements OnModuleDestroy {
@@ -140,7 +140,7 @@ export class GPIOService implements OnModuleDestroy {
       }
 
       const payload = {
-        status: "calling",
+        status: 'calling',
         branchId: user.branchId,
         isMultiService: false,
         location: user.location,

@@ -1,8 +1,9 @@
-import {Injectable, Logger} from '@nestjs/common';
-import {HttpService} from '@nestjs/axios';
-import {firstValueFrom} from 'rxjs';
-import {AxiosResponse} from 'axios';
-import {ApiResponse, UserLocation} from '../user/user.service';
+import { Injectable, Logger } from '@nestjs/common';
+import { HttpService } from '@nestjs/axios';
+import { firstValueFrom } from 'rxjs';
+import { AxiosResponse, HttpStatusCode } from 'axios';
+import { ApiResponse, UserLocation } from '../user/user.service';
+import * as process from 'node:process';
 
 export interface SwitchEventPayload {
   location: UserLocation;
@@ -17,39 +18,44 @@ export class ApiService {
   private readonly apiUrl: string;
   private readonly apiEndpoint: string;
   private readonly deviceId: string;
+  private readonly userAgent: string;
 
   constructor(private readonly httpService: HttpService) {
     this.apiUrl = process.env.API_URL || '';
     this.apiEndpoint = process.env.API_ENDPOINT || '';
     this.deviceId = process.env.DEVICE_ID || '';
+    this.userAgent = `RaspberryPi-GPIO-Controller-NestJS/1.0/${this.deviceId}`;
   }
 
   async fetchUsers(): Promise<ApiResponse> {
     const url = `${this.apiUrl}/${this.apiEndpoint}`;
-    this.logger.log(`📡 Fetching users from: ${url}`);
+    this.logger.log(`📡 Fetching users`);
 
     const response: AxiosResponse<ApiResponse> = await firstValueFrom(
-      this.httpService.get(url, {
-        timeout: 10000,
-        headers: {
-          'Content-Type': 'application/json',
-          'User-Agent': this.deviceId,
+      this.httpService.post(
+        url,
+        { branchId: this.deviceId },
+        {
+          timeout: 10000,
+          headers: {
+            'Content-Type': 'application/json',
+            'User-Agent': this.userAgent,
+          },
         },
-      }),
+      ),
     );
 
-    if (response.status !== 200) {
+    if (response.status !== HttpStatusCode.Created) {
       throw new Error(`API returned status ${response.status}`);
     }
 
     this.logger.log(`✅ Successfully fetched users from API`);
     return response.data;
-
   }
 
   async sendSwitchEvent(payload: SwitchEventPayload, accessToken: string): Promise<void> {
     try {
-      const url = `${this.apiUrl}/switch-event`; // You may need to adjust this endpoint
+      const url = `${this.apiUrl}/api/v1/companies/${process.env.COMPANY_ID}/queues/call-external`;
 
       const response = await firstValueFrom(
         this.httpService.post(url, payload, {
@@ -57,12 +63,12 @@ export class ApiService {
           headers: {
             'Content-Type': 'application/json',
             Authorization: `Bearer ${accessToken}`,
-            'User-Agent': 'RaspberryPi-GPIO-Controller-NestJS/1.0',
+            'User-Agent': this.userAgent,
           },
         }),
       );
 
-      if (response.status === 200 || response.status === 201) {
+      if ([HttpStatusCode.Ok, HttpStatusCode.Created].includes(response.status)) {
         this.logger.log('✅ Switch event sent successfully to API');
       } else {
         this.logger.warn(`⚠️ API responded with status ${response.status}`);
