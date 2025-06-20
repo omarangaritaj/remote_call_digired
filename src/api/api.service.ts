@@ -22,7 +22,7 @@ export class ApiService {
   private readonly apiEndpoint: string;
 
   constructor(private readonly httpService: HttpService) {
-    this.apiUrl = process.env.API_URL || 'https://api.ejemplo.com';
+    this.apiUrl = process.env.API_URL;
     this.apiEndpoint = process.env.API_ENDPOINT || '/users';
   }
 

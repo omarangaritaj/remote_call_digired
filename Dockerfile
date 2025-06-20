@@ -1,4 +1,4 @@
-FROM node:18-slim
+FROM node:22.11.0-bullseye-slim
 
 # Install system dependencies for GPIO and build tools
 RUN apt-get update && apt-get install -y \

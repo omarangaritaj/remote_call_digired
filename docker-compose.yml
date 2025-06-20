@@ -11,18 +11,16 @@ services:
       - NODE_ENV=${NODE_ENV:-production}
       - API_URL=${API_URL}
       - API_ENDPOINT=${API_ENDPOINT}
-      - DEVICE_ID=${DEVICE_ID:-raspberry-pi-001}
-      - DATABASE_URL=file:./data/dev.db
-    privileged: true  # Necessary for GPIO access
+      - DEVICE_ID=${DEVICE_ID}
+      - DATABASE_URL=${DATABASE_URL}
+    privileged: true
     volumes:
       - /sys:/sys
       - /dev:/dev
-      - ./data:/app/data  # Persist SQLite database
+      - ./data:/app/data
     devices:
       - /dev/gpiomem:/dev/gpiomem
       - /dev/mem:/dev/mem
-    group_add:
-      - gpio
     networks:
       - gpio-network
 
