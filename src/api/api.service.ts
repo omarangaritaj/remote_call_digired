@@ -1,18 +1,14 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { HttpService } from '@nestjs/axios';
-import { firstValueFrom } from 'rxjs';
-import { AxiosResponse } from 'axios';
-import { ApiResponse } from '../user/user.service';
+import {Injectable, Logger} from '@nestjs/common';
+import {HttpService} from '@nestjs/axios';
+import {firstValueFrom} from 'rxjs';
+import {AxiosResponse} from 'axios';
+import {ApiResponse, UserLocation} from '../user/user.service';
 
 export interface SwitchEventPayload {
-  location: {
-    name: string;
-    id: string;
-    number: number;
-  };
-  id: string;
+  location: UserLocation;
   branchId: string;
   isMultiService: boolean;
+  status: string;
 }
 
 @Injectable()
@@ -20,37 +16,35 @@ export class ApiService {
   private readonly logger = new Logger(ApiService.name);
   private readonly apiUrl: string;
   private readonly apiEndpoint: string;
+  private readonly deviceId: string;
 
   constructor(private readonly httpService: HttpService) {
-    this.apiUrl = process.env.API_URL;
-    this.apiEndpoint = process.env.API_ENDPOINT || '/users';
+    this.apiUrl = process.env.API_URL || '';
+    this.apiEndpoint = process.env.API_ENDPOINT || '';
+    this.deviceId = process.env.DEVICE_ID || '';
   }
 
   async fetchUsers(): Promise<ApiResponse> {
-    try {
-      const url = `${this.apiUrl}${this.apiEndpoint}`;
-      this.logger.log(`📡 Fetching users from: ${url}`);
+    const url = `${this.apiUrl}/${this.apiEndpoint}`;
+    this.logger.log(`📡 Fetching users from: ${url}`);
 
-      const response: AxiosResponse<ApiResponse> = await firstValueFrom(
-        this.httpService.get(url, {
-          timeout: 10000,
-          headers: {
-            'Content-Type': 'application/json',
-            'User-Agent': 'RaspberryPi-GPIO-Controller-NestJS/1.0',
-          },
-        }),
-      );
+    const response: AxiosResponse<ApiResponse> = await firstValueFrom(
+      this.httpService.get(url, {
+        timeout: 10000,
+        headers: {
+          'Content-Type': 'application/json',
+          'User-Agent': this.deviceId,
+        },
+      }),
+    );
 
-      if (response.status !== 200) {
-        throw new Error(`API returned status ${response.status}`);
-      }
-
-      this.logger.log(`✅ Successfully fetched users from API`);
-      return response.data;
-    } catch (error) {
-      this.logger.error('❌ Failed to fetch users from API:', error);
-      throw error;
+    if (response.status !== 200) {
+      throw new Error(`API returned status ${response.status}`);
     }
+
+    this.logger.log(`✅ Successfully fetched users from API`);
+    return response.data;
+
   }
 
   async sendSwitchEvent(payload: SwitchEventPayload, accessToken: string): Promise<void> {

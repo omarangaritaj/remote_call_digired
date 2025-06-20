@@ -1,10 +1,12 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
-import { ApiService } from '../api/api.service';
+import {Injectable, Logger} from '@nestjs/common';
+import {PrismaService} from '../prisma/prisma.service';
+import {ApiService} from '../api/api.service';
+import {SWITCH_PINS} from "../constants/pin.constants";
+import {User} from "@prisma/client";
 
 export interface UserLocation {
-  name: string;
   id: string;
+  name: string;
   number: number;
 }
 
@@ -13,6 +15,7 @@ export interface ApiUser {
   branchId: string;
   location: UserLocation;
   accessToken: string;
+  pin: number;
 }
 
 export interface ApiResponse {
@@ -26,7 +29,8 @@ export class UserService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly apiService: ApiService,
-  ) {}
+  ) {
+  }
 
   async fetchAndStoreUsers(): Promise<void> {
     try {
@@ -41,9 +45,9 @@ export class UserService {
 
       this.logger.log(`📥 Received ${apiResponse.users.length} users from API`);
 
-      // Process each user
       for (const apiUser of apiResponse.users) {
-        await this.upsertUser(apiUser);
+        const index = apiResponse.users.findIndex((user) => user.id === apiUser.id);
+        await this.upsertUser(apiUser, index);
       }
 
       this.logger.log('✅ Users synchronized successfully');
@@ -53,93 +57,45 @@ export class UserService {
     }
   }
 
-  private async upsertUser(apiUser: ApiUser): Promise<void> {
-    try {
-      const locationString = JSON.stringify(apiUser.location);
+  private async upsertUser(apiUser: ApiUser, index): Promise<void> {
+    const locationString = JSON.stringify(apiUser.location);
 
-      const user = await this.prisma.user.upsert({
-        where: { id: apiUser.id },
-        update: {
-          branchId: apiUser.branchId,
-          location: locationString,
-          accessToken: apiUser.accessToken,
-        },
-        create: {
-          id: apiUser.id,
-          branchId: apiUser.branchId,
-          location: locationString,
-          accessToken: apiUser.accessToken,
-        },
-      });
+    const user = await this.prisma.user.upsert({
+      where: {userId: apiUser.id},
+      update: {
+        accessToken: apiUser.accessToken,
+        branchId: apiUser.branchId,
+        location: locationString,
+      },
+      create: {
+        accessToken: apiUser.accessToken,
+        branchId: apiUser.branchId,
+        location: locationString,
+        switchInput: SWITCH_PINS[(apiUser.pin - 1) || index],
+        userId: apiUser.id,
+      },
+    });
 
-      this.logger.log(`👤 User ${user.id} synchronized`);
-    } catch (error) {
-      this.logger.error(`Error upserting user ${apiUser.id}:`, error);
-      throw error;
-    }
+    this.logger.log(`👤 User ${user?.userId} synchronized`);
   }
 
-  async getAllUsers() {
-    try {
-      const users = await this.prisma.user.findMany();
 
-      return users.map(user => ({
-        ...user,
-        location: JSON.parse(user.location) as UserLocation,
-      }));
-    } catch (error) {
-      this.logger.error('Error fetching users:', error);
-      throw error;
-    }
-  }
-
-  async getUserById(id: string) {
+  async getUser(switchIndex: number) {
     try {
-      const user = await this.prisma.user.findUnique({
-        where: { id },
-      });
+      const user = await this.prisma.user.findFirst({where: { switchInput: switchIndex}});
 
       if (!user) {
-        return null;
+        this.logger.error('No users');
+        return;
       }
 
       return {
         ...user,
-        location: JSON.parse(user.location) as UserLocation,
-      };
-    } catch (error) {
-      this.logger.error(`Error fetching user ${id}:`, error);
-      throw error;
-    }
-  }
-
-  async getRandomUser() {
-    try {
-      const users = await this.prisma.user.findMany();
-
-      if (users.length === 0) {
-        return null;
-      }
-
-      const randomIndex = Math.floor(Math.random() * users.length);
-      const user = users[randomIndex];
-
-      return {
-        ...user,
-        location: JSON.parse(user.location) as UserLocation,
+        location: JSON.parse(user.location),
       };
     } catch (error) {
       this.logger.error('Error fetching random user:', error);
       throw error;
-    }
-  }
-
-  async getUsersCount(): Promise<number> {
-    try {
-      return await this.prisma.user.count();
-    } catch (error) {
-      this.logger.error('Error counting users:', error);
-      return 0;
     }
   }
 }
