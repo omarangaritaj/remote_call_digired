@@ -19,6 +19,8 @@ services:
       - DEVICE_ID=${DEVICE_ID}
       - NODE_ENV=${NODE_ENV:-production}
     privileged: true  # Necessary for GPIO access
+    group_add:
+      - gpio
     volumes:
       - /sys:/sys
       - /dev:/dev
@@ -47,6 +49,8 @@ services:
       - DEVICE_ID=${DEVICE_ID}
       - DATABASE_URL=${DATABASE_URL}
     privileged: true
+    group_add:
+      - gpio
     volumes:
       - .:/app  # Mount source code for hot reload
       - /app/node_modules  # Exclude node_modules from mount
