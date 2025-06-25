@@ -26,8 +26,6 @@ services:
     devices:
       - /dev/gpiomem:/dev/gpiomem
       - /dev/mem:/dev/mem
-    group_add:
-      - gpio
     networks:
       - gpio-network
     profiles:
@@ -58,8 +56,6 @@ services:
     devices:
       - /dev/gpiomem:/dev/gpiomem
       - /dev/mem:/dev/mem
-    group_add:
-      - gpio
     networks:
       - gpio-network
     profiles:
