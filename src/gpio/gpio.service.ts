@@ -152,7 +152,7 @@ export class GPIOService implements OnModuleDestroy {
       const location = JSON.parse(user.location);
 
       const payload = {
-        branchId: process.env.DEVICE_ID,
+        branchId: process.env.DEVICE_ID || 'default-branch',
         isMultiService: false,
         location: location,
         status: 'calling',
