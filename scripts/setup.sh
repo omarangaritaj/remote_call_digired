@@ -31,6 +31,31 @@ if [ ! -f .env ]; then
     echo "⚠️  Please edit .env file with your configuration"
 fi
 
+# Habilitar GPIO en Raspberry Pi
+echo "🔧 Verificando configuración GPIO..."
+if ! grep -q "dtparam=spi=on" /boot/config.txt; then
+    echo "dtparam=spi=on" | sudo tee -a /boot/config.txt
+fi
+
+if ! grep -q "dtparam=i2c_arm=on" /boot/config.txt; then
+    echo "dtparam=i2c_arm=on" | sudo tee -a /boot/config.txt
+fi
+
+# Agregar usuario al grupo gpio
+sudo usermod -a -G gpio $USER
+
+echo "4️⃣ Habilitando GPIO en configuración del sistema..."
+if ! grep -q "dtparam=gpio=on" /boot/config.txt 2>/dev/null; then
+    if [ -w /boot/config.txt ]; then
+        echo "dtparam=gpio=on" | sudo tee -a /boot/config.txt > /dev/null
+        echo "   ✅ GPIO habilitado en /boot/config.txt"
+    else
+        echo "   ⚠️ No se pudo escribir en /boot/config.txt"
+    fi
+else
+    echo "   ✅ GPIO ya habilitado en configuración"
+fi
+
 # Install dependencies
 echo "📦 Installing Node.js dependencies..."
 npm install
