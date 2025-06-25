@@ -28,110 +28,117 @@ export class GPIOService implements OnModuleDestroy {
 
   async initialize() {
     try {
-      this.logger.log('Initializing GPIO...');
+      this.logger.log('🔍 Checking GPIO availability...');
 
-      // Check if GPIO is available
+      // CRITICAL: Check GPIO availability FIRST
       this.gpioAvailable = this.checkGpioAvailability();
 
       if (!this.gpioAvailable) {
-        this.logger.warn('⚠️ GPIO not available - running in simulation mode');
-        this.logger.log('💡 Use POST /test/switch/{index} endpoints to test functionality');
-        this.logger.log('📍 GPIO simulation active - all switch presses will be simulated');
-        return;
+        this.logger.warn('⚠️ GPIO hardware not available - activating simulation mode');
+        this.logger.log('💡 Test switches using: POST /test/switch/{0-4}');
+        this.logger.log('🔧 All GPIO operations will be simulated');
+        return; // Exit early - no hardware initialization
       }
 
       this.logger.log('🔌 GPIO hardware detected - initializing physical pins...');
 
-      // Initialize switch pins (input with pull-up)
-      for (let i = 0; i < SWITCH_PINS.length; i++) {
-        const pin = SWITCH_PINS[i];
-        try {
-          const gpio = new Gpio(pin, 'in', 'rising', { activeLow: true });
-          this.switches.push(gpio);
-          this.logger.log(`✅ Switch ${i + 1} initialized on GPIO ${pin}`);
-        } catch (error) {
-          this.logger.error(`❌ Failed to initialize switch ${i + 1} on GPIO ${pin}:`, error);
-          throw error;
-        }
-      }
-
-      // Initialize bulb pins (output)
-      for (let i = 0; i < BULB_PINS.length; i++) {
-        const pin = BULB_PINS[i];
-        try {
-          const gpio = new Gpio(pin, 'out');
-          await gpio.write(0); // Initially off
-          this.bulbs.push(gpio);
-          this.logger.log(`✅ Bulb ${i + 1} initialized on GPIO ${pin}`);
-        } catch (error) {
-          this.logger.error(`❌ Failed to initialize bulb ${i + 1} on GPIO ${pin}:`, error);
-          throw error;
-        }
-      }
+      // Only initialize hardware if GPIO is available
+      await this.initializeHardware();
 
       this.logger.log('✅ GPIO hardware initialization completed');
     } catch (error) {
       this.logger.error('❌ GPIO initialization failed:', error);
+      this.gpioAvailable = false; // Fallback to simulation
+      this.logger.warn('🔄 Falling back to simulation mode due to hardware error');
       this.cleanup();
-      throw error;
+    }
+  }
+
+  private async initializeHardware() {
+    // Initialize switch pins (input with pull-up)
+    for (let i = 0; i < SWITCH_PINS.length; i++) {
+      const pin = SWITCH_PINS[i];
+      try {
+        const gpio = new Gpio(pin, 'in', 'rising', { activeLow: true });
+        this.switches.push(gpio);
+        this.logger.log(`✅ Switch ${i + 1} initialized on GPIO ${pin}`);
+      } catch (error) {
+        this.logger.error(`❌ Failed to initialize switch ${i + 1} on GPIO ${pin}:`, error);
+        throw error;
+      }
+    }
+
+    // Initialize bulb pins (output)
+    for (let i = 0; i < BULB_PINS.length; i++) {
+      const pin = BULB_PINS[i];
+      try {
+        const gpio = new Gpio(pin, 'out');
+        await gpio.write(0); // Initially off
+        this.bulbs.push(gpio);
+        this.logger.log(`✅ Bulb ${i + 1} initialized on GPIO ${pin}`);
+      } catch (error) {
+        this.logger.error(`❌ Failed to initialize bulb ${i + 1} on GPIO ${pin}:`, error);
+        throw error;
+      }
     }
   }
 
   private checkGpioAvailability(): boolean {
     try {
-      // Check if we're on a Raspberry Pi with GPIO access
+      // Check basic GPIO requirements
       const hasGpioExport = fs.existsSync('/sys/class/gpio/export');
       const hasGpioMem = fs.existsSync('/dev/gpiomem');
       const hasDeviceTree = fs.existsSync('/proc/device-tree/model');
 
-      this.logger.log(`GPIO Check - Export: ${hasGpioExport}, Mem: ${hasGpioMem}, DeviceTree: ${hasDeviceTree}`);
+      this.logger.log(`🔍 GPIO Check - Export: ${hasGpioExport}, Memory: ${hasGpioMem}, DeviceTree: ${hasDeviceTree}`);
 
-      // Also check if we can read the device tree model
-      if (hasDeviceTree) {
-        try {
-          const model = fs.readFileSync('/proc/device-tree/model', 'utf8');
-          const isRaspberryPi = model.includes('Raspberry Pi');
-          this.logger.log(`Device Model: ${model.trim()}, Is Raspberry Pi: ${isRaspberryPi}`);
-
-          // Additional check: try to access GPIO export (write test)
-          if (hasGpioExport && hasGpioMem && isRaspberryPi) {
-            try {
-              // Test if we can write to GPIO export
-              fs.accessSync('/sys/class/gpio/export', fs.constants.W_OK);
-              this.logger.log('✅ GPIO export is writable');
-              return true;
-            } catch (writeError) {
-              this.logger.warn(`⚠️ GPIO export exists but not writable: ${writeError.message}`);
-              return false;
-            }
-          }
-
-          return false;
-        } catch (error) {
-          this.logger.warn(`Could not read device model: ${error.message}`);
-          return false;
-        }
+      if (!hasGpioExport || !hasGpioMem || !hasDeviceTree) {
+        return false;
       }
 
-      return false;
+      // Check if it's actually a Raspberry Pi
+      try {
+        const model = fs.readFileSync('/proc/device-tree/model', 'utf8');
+        const isRaspberryPi = model.includes('Raspberry Pi');
+        this.logger.log(`📱 Device: ${model.trim()}`);
+        this.logger.log(`🍓 Is Raspberry Pi: ${isRaspberryPi}`);
+
+        if (!isRaspberryPi) {
+          return false;
+        }
+      } catch (error) {
+        this.logger.warn(`⚠️ Could not read device model: ${error.message}`);
+        return false;
+      }
+
+      // Test write access to GPIO export
+      try {
+        fs.accessSync('/sys/class/gpio/export', fs.constants.W_OK);
+        this.logger.log('✅ GPIO export is writable');
+        return true;
+      } catch (writeError) {
+        this.logger.warn(`⚠️ GPIO export not writable: ${writeError.message}`);
+        return false;
+      }
+
     } catch (error) {
-      this.logger.warn(`GPIO availability check failed: ${error.message}`);
+      this.logger.warn(`⚠️ GPIO availability check failed: ${error.message}`);
       return false;
     }
   }
 
   startMonitoring() {
     if (this.isMonitoring) {
-      this.logger.warn('GPIO monitoring already started');
+      this.logger.warn('⚠️ GPIO monitoring already active');
       return;
     }
 
-    this.logger.log('Starting GPIO monitoring...');
+    this.logger.log('🚀 Starting GPIO monitoring...');
     this.isMonitoring = true;
 
     if (!this.gpioAvailable) {
-      this.logger.log('📝 GPIO simulation mode active');
-      this.logger.log('🧪 Test switches using: POST /test/switch/{0-4}');
+      this.logger.log('📝 SIMULATION MODE: GPIO monitoring active');
+      this.logger.log('🧪 Test endpoints: POST /test/switch/{0-4}');
       return;
     }
 
@@ -139,77 +146,78 @@ export class GPIOService implements OnModuleDestroy {
     this.switches.forEach((gpio, index) => {
       gpio.watch((err, value) => {
         if (err) {
-          this.logger.error(`Error monitoring switch ${index + 1}:`, err);
+          this.logger.error(`❌ Error monitoring switch ${index + 1}:`, err);
           return;
         }
 
         if (value === 1) {
-          // Rising edge detected
           this.handleSwitchPress(index);
         }
       });
     });
 
-    this.logger.log('✅ GPIO hardware monitoring started');
+    this.logger.log('✅ HARDWARE MODE: Physical GPIO monitoring active');
   }
 
   async handleSwitchPress(switchIndex: number) {
     if (switchIndex < 0 || switchIndex >= SWITCH_PINS.length) {
-      this.logger.error(`Invalid switch index: ${switchIndex}`);
+      this.logger.error(`❌ Invalid switch index: ${switchIndex}`);
       return;
     }
 
-    this.logger.log(`🔘 Switch ${switchIndex + 1} pressed`);
+    this.logger.log(`🔘 Switch ${switchIndex + 1} activated`);
 
     try {
       // Execute both actions in parallel
-      const promises = [this.turnOnBulb(switchIndex), this.sendApiRequest(switchIndex)];
+      const promises = [
+        this.turnOnBulb(switchIndex),
+        this.sendApiRequest(switchIndex)
+      ];
 
       await Promise.all(promises);
     } catch (error) {
-      this.logger.error(`Error handling switch ${switchIndex + 1} press:`, error);
+      this.logger.error(`❌ Error handling switch ${switchIndex + 1}:`, error);
     }
   }
 
   private async turnOnBulb(bulbIndex: number) {
     try {
       if (!this.gpioAvailable) {
-        this.logger.log(`🔧 SIMULATION: Bulb ${bulbIndex + 1} turning ON...`);
-        await new Promise(resolve => setTimeout(resolve, 100)); // Small delay for realism
-        this.logger.log(`💡 SIMULATION: Bulb ${bulbIndex + 1} ON for 2 seconds`);
+        // Simulation mode
+        this.logger.log(`🔧 SIMULATION: Bulb ${bulbIndex + 1} → ON`);
+        await new Promise(resolve => setTimeout(resolve, 100));
+        this.logger.log(`💡 SIMULATION: Bulb ${bulbIndex + 1} illuminated (2s)`);
         await new Promise(resolve => setTimeout(resolve, 2000));
-        this.logger.log(`🔧 SIMULATION: Bulb ${bulbIndex + 1} turned OFF`);
+        this.logger.log(`🔧 SIMULATION: Bulb ${bulbIndex + 1} → OFF`);
         return;
       }
 
+      // Hardware mode
       const bulb = this.bulbs[bulbIndex];
       if (!bulb) {
-        this.logger.error(`Bulb ${bulbIndex + 1} not initialized`);
+        this.logger.error(`❌ Bulb ${bulbIndex + 1} not initialized`);
         return;
       }
 
-      // Turn on bulb
       await bulb.write(1);
-      this.logger.log(`💡 Bulb ${bulbIndex + 1} turned ON (GPIO ${BULB_PINS[bulbIndex]})`);
+      this.logger.log(`💡 HARDWARE: Bulb ${bulbIndex + 1} → ON (GPIO ${BULB_PINS[bulbIndex]})`);
 
-      // Wait 2 seconds
       await new Promise(resolve => setTimeout(resolve, 2000));
 
-      // Turn off bulb
       await bulb.write(0);
-      this.logger.log(`💡 Bulb ${bulbIndex + 1} turned OFF (GPIO ${BULB_PINS[bulbIndex]})`);
+      this.logger.log(`💡 HARDWARE: Bulb ${bulbIndex + 1} → OFF (GPIO ${BULB_PINS[bulbIndex]})`);
+
     } catch (error) {
-      this.logger.error(`Error controlling bulb ${bulbIndex + 1}:`, error);
+      this.logger.error(`❌ Error controlling bulb ${bulbIndex + 1}:`, error);
     }
   }
 
   private async sendApiRequest(switchIndex: number) {
     try {
-      // Get user by switch index from database
       const user = await this.userService.getUser(switchIndex);
 
       if (!user) {
-        this.logger.error(`No user found for switch ${switchIndex + 1}`);
+        this.logger.error(`❌ No user found for switch ${switchIndex + 1}`);
         return;
       }
 
@@ -220,12 +228,13 @@ export class GPIOService implements OnModuleDestroy {
         location: user.location,
       };
 
-      this.logger.log(`📡 Sending API request for switch ${switchIndex + 1} (user: ${user.userId})`);
+      this.logger.log(`📡 API: Sending request for switch ${switchIndex + 1} (user: ${user.userId})`);
 
       await this.apiService.sendSwitchEvent(payload, user.accessToken);
-      this.logger.log(`✅ API request sent successfully for switch ${switchIndex + 1}`);
+      this.logger.log(`✅ API: Request completed for switch ${switchIndex + 1}`);
+
     } catch (error) {
-      this.logger.error(`❌ Failed to send API request for switch ${switchIndex + 1}:`, error);
+      this.logger.error(`❌ API: Failed for switch ${switchIndex + 1}:`, error);
     }
   }
 
@@ -253,41 +262,39 @@ export class GPIOService implements OnModuleDestroy {
   }
 
   private cleanup() {
-    this.logger.log('Cleaning up GPIO resources...');
+    this.logger.log('🧹 Cleaning up GPIO resources...');
     this.isMonitoring = false;
 
-    // Clear intervals
     this.monitoringIntervals.forEach(interval => clearInterval(interval));
     this.monitoringIntervals = [];
 
     if (!this.gpioAvailable) {
-      this.logger.log('✅ GPIO cleanup completed (simulation mode)');
+      this.logger.log('✅ Cleanup completed (simulation mode)');
       return;
     }
 
-    // Cleanup switches
+    // Hardware cleanup
     this.switches.forEach((gpio, index) => {
       try {
         gpio.unexport();
         this.logger.log(`✅ Switch ${index + 1} cleaned up`);
       } catch (error) {
-        this.logger.error(`Error cleaning up switch ${index + 1}:`, error);
+        this.logger.error(`⚠️ Error cleaning switch ${index + 1}:`, error);
       }
     });
 
-    // Cleanup bulbs
     this.bulbs.forEach((gpio, index) => {
       try {
-        gpio.writeSync(0); // Turn off before cleanup
+        gpio.writeSync(0);
         gpio.unexport();
         this.logger.log(`✅ Bulb ${index + 1} cleaned up`);
       } catch (error) {
-        this.logger.error(`Error cleaning up bulb ${index + 1}:`, error);
+        this.logger.error(`⚠️ Error cleaning bulb ${index + 1}:`, error);
       }
     });
 
     this.switches = [];
     this.bulbs = [];
-    this.logger.log('✅ GPIO hardware cleanup completed');
+    this.logger.log('✅ Hardware cleanup completed');
   }
 }
