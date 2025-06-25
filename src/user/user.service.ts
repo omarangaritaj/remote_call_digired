@@ -1,8 +1,9 @@
+// src/user/user.service.ts
+
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { ApiService } from '../api/api.service';
 import { SWITCH_PINS } from '../constants/pin.constants';
-import { User } from '@prisma/client';
 
 export interface UserLocation {
   id: string;

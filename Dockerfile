@@ -17,7 +17,7 @@ WORKDIR /app
 COPY package*.json ./
 COPY prisma ./prisma/
 
-# install nestjs CLI globally
+# install nestjs CLI globallyDockerfile
 RUN npm install -g @nestjs/cli
 
 # Install dependencies (include dev dependencies for build)

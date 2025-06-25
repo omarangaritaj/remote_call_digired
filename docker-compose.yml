@@ -1,20 +1,55 @@
 version: '3.8'
 
 services:
+  # Production service
   gpio-controller:
-    build: .
-    container_name: raspberry-gpio-controller-nestjs
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
+    container_name: gpio
     restart: always
     ports:
       - "3000:3000"
     environment:
+      - API_ENDPOINT=${API_ENDPOINT}
+      - API_URL=${API_URL}
+      - COMPANY_ID=${COMPANY_ID}
+      - DATABASE_URL=${DATABASE_URL}
+      - DEVICE_ID=${DEVICE_ID}
       - NODE_ENV=${NODE_ENV:-production}
+    privileged: true  # Necessary for GPIO access
+    volumes:
+      - /sys:/sys
+      - /dev:/dev
+      - ./data:/app/data  # Persist SQLite database
+    devices:
+      - /dev/gpiomem:/dev/gpiomem
+      - /dev/mem:/dev/mem
+    networks:
+      - gpio-network
+    profiles:
+      - production
+
+  # Development service with hot reload
+  gpio-controller-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: gpio-dev
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=development
       - API_URL=${API_URL}
       - API_ENDPOINT=${API_ENDPOINT}
+      - COMPANY_ID=${COMPANY_ID}
       - DEVICE_ID=${DEVICE_ID}
       - DATABASE_URL=${DATABASE_URL}
     privileged: true
     volumes:
+      - .:/app  # Mount source code for hot reload
+      - /app/node_modules  # Exclude node_modules from mount
       - /sys:/sys
       - /dev:/dev
       - ./data:/app/data
@@ -23,6 +58,8 @@ services:
       - /dev/mem:/dev/mem
     networks:
       - gpio-network
+    profiles:
+      - development
 
 networks:
   gpio-network:

@@ -1,3 +1,5 @@
+// src/app.controller.ts
+
 import { Controller, Get, Post, Param, ParseIntPipe } from '@nestjs/common';
 import { AppService } from './app.service';
 import { GPIOService } from './gpio/gpio.service';

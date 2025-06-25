@@ -1,8 +1,10 @@
+// src/gpio/gpio.service.ts
+
 import { Injectable, Logger, OnModuleDestroy } from '@nestjs/common';
 import { Gpio } from 'onoff';
 import { ApiService } from '../api/api.service';
 import { UserService } from '../user/user.service';
-import { BULB_PINS, SWITCH_PINS } from '../constants/pin.constants';
+import {BULB_PINS, SWITCH_PINS} from "../constants/pin.constants";
 
 @Injectable()
 export class GPIOService implements OnModuleDestroy {
@@ -15,7 +17,7 @@ export class GPIOService implements OnModuleDestroy {
   // State tracking
   private switchStates: boolean[] = new Array(5).fill(false);
   private isMonitoring = false;
-  private monitoringIntervals: NodeJS.Timeout[] = [];
+  private monitoringIntervals: ReturnType<typeof setTimeout>[] = [];
 
   constructor(
     private readonly apiService: ApiService,
@@ -78,8 +80,7 @@ export class GPIOService implements OnModuleDestroy {
           return;
         }
 
-        if (value === 1) {
-          // Rising edge detected
+        if (value === 1) { // Rising edge detected
           this.handleSwitchPress(index);
         }
       });
