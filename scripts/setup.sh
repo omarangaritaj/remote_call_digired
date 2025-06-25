@@ -69,10 +69,10 @@ else
 fi
 
 # Install Docker Compose if not present
-if ! command -v docker-compose &> /dev/null; then
+if ! command -v docker compose &> /dev/null; then
     print_info "Instalando Docker Compose..."
     sudo apt-get update -qq
-    sudo apt-get install -y docker-compose
+    sudo apt-get install -y docker compose
     print_status "Docker Compose instalado"
 else
     print_status "Docker Compose ya está instalado"
@@ -309,8 +309,8 @@ else
 fi
 
 echo -e "\n📋 Recent Logs:"
-docker-compose logs --tail=10 gpio-controller-dev 2>/dev/null || \
-docker-compose logs --tail=10 gpio-controller 2>/dev/null || \
+docker compose logs --tail=10 gpio-controller-dev 2>/dev/null || \
+docker compose logs --tail=10 gpio-controller 2>/dev/null || \
 echo "❌ No logs available"
 EOF
 
