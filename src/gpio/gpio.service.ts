@@ -4,6 +4,7 @@ import { Injectable, Logger, OnModuleDestroy } from '@nestjs/common';
 import { Gpio } from 'onoff';
 import { ApiService } from '../api/api.service';
 import { UserService } from '../user/user.service';
+import * as process from 'node:process';
 
 @Injectable()
 export class GPIOService implements OnModuleDestroy {
@@ -153,7 +154,7 @@ export class GPIOService implements OnModuleDestroy {
       const payload = {
         location: location,
         id: user.id,
-        branchId: user.branchId,
+        branchId: process.env.DEVICE_ID,
         isMultiService: false,
       };
 
