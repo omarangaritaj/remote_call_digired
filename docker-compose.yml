@@ -7,7 +7,7 @@ services:
       context: .
       dockerfile: Dockerfile
       target: production
-    container_name: raspberry-gpio-controller-nestjs
+    container_name: gpio-prod
     restart: always
     ports:
       - "3000:3000"
@@ -16,7 +16,7 @@ services:
       - API_URL=${API_URL}
       - API_ENDPOINT=${API_ENDPOINT}
       - COMPANY_ID=${COMPANY_ID}
-      - DEVICE_ID=${DEVICE_ID:-raspberry-pi-001}
+      - DEVICE_ID=${DEVICE_ID}
       - DATABASE_URL=file:./data/dev.db
     privileged: true  # Necessary for GPIO access
     volumes:
@@ -36,7 +36,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.dev
-    container_name: raspberry-gpio-controller-dev
+    container_name: gpio-dev
     ports:
       - "3000:3000"
     environment:
@@ -44,7 +44,7 @@ services:
       - API_URL=${API_URL}
       - API_ENDPOINT=${API_ENDPOINT}
       - COMPANY_ID=${COMPANY_ID}
-      - DEVICE_ID=${DEVICE_ID:-raspberry-pi-001}
+      - DEVICE_ID=${DEVICE_ID}
       - DATABASE_URL=file:./data/dev.db
     privileged: true
     volumes:
