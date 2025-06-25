@@ -7,20 +7,18 @@ services:
       context: .
       dockerfile: Dockerfile
       target: production
-    container_name: gpio
+    container_name: raspberry-gpio-controller-nestjs
     restart: always
     ports:
       - "3000:3000"
     environment:
-      - API_ENDPOINT=${API_ENDPOINT}
-      - API_URL=${API_URL}
-      - COMPANY_ID=${COMPANY_ID}
-      - DATABASE_URL=${DATABASE_URL}
-      - DEVICE_ID=${DEVICE_ID}
       - NODE_ENV=${NODE_ENV:-production}
+      - API_URL=${API_URL}
+      - API_ENDPOINT=${API_ENDPOINT}
+      - COMPANY_ID=${COMPANY_ID}
+      - DEVICE_ID=${DEVICE_ID:-raspberry-pi-001}
+      - DATABASE_URL=file:./data/dev.db
     privileged: true  # Necessary for GPIO access
-    group_add:
-      - gpio
     volumes:
       - /sys:/sys
       - /dev:/dev
@@ -28,6 +26,8 @@ services:
     devices:
       - /dev/gpiomem:/dev/gpiomem
       - /dev/mem:/dev/mem
+    group_add:
+      - gpio
     networks:
       - gpio-network
     profiles:
@@ -38,7 +38,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.dev
-    container_name: gpio-dev
+    container_name: raspberry-gpio-controller-dev
     ports:
       - "3000:3000"
     environment:
@@ -46,11 +46,9 @@ services:
       - API_URL=${API_URL}
       - API_ENDPOINT=${API_ENDPOINT}
       - COMPANY_ID=${COMPANY_ID}
-      - DEVICE_ID=${DEVICE_ID}
-      - DATABASE_URL=${DATABASE_URL}
+      - DEVICE_ID=${DEVICE_ID:-raspberry-pi-001}
+      - DATABASE_URL=file:./data/dev.db
     privileged: true
-    group_add:
-      - gpio
     volumes:
       - .:/app  # Mount source code for hot reload
       - /app/node_modules  # Exclude node_modules from mount
@@ -60,6 +58,8 @@ services:
     devices:
       - /dev/gpiomem:/dev/gpiomem
       - /dev/mem:/dev/mem
+    group_add:
+      - gpio
     networks:
       - gpio-network
     profiles:
