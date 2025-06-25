@@ -174,7 +174,9 @@ export class GPIOService implements OnModuleDestroy {
         this.sendApiRequest(switchIndex)
       ];
 
-      await Promise.all(promises);
+      const [turnOnBulb, sendApiRequest ] = await Promise.all(promises);
+      console.log(`✅ Actions completed for switch ${switchIndex + 1}:`, { turnOnBulb, sendApiRequest });
+
     } catch (error) {
       this.logger.error(`❌ Error handling switch ${switchIndex + 1}:`, error);
     }
