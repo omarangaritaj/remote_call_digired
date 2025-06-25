@@ -30,32 +30,32 @@ esac
 case $ACTION in
   "build")
     echo "🏗️  Building Docker image..."
-    COMPOSE_PROFILES=$COMPOSE_PROFILES docker-compose build --no-cache $SERVICE_NAME
+    COMPOSE_PROFILES=$COMPOSE_PROFILES docker compose build --no-cache $SERVICE_NAME
     echo "✅ Build completed!"
     ;;
   "up")
     echo "🏗️  Building and starting service..."
-    COMPOSE_PROFILES=$COMPOSE_PROFILES docker-compose up --build -d $SERVICE_NAME
+    COMPOSE_PROFILES=$COMPOSE_PROFILES docker compose up --build -d $SERVICE_NAME
     echo "✅ Service started!"
-    echo "📊 Logs: docker-compose logs -f $SERVICE_NAME"
+    echo "📊 Logs: docker compose logs -f $SERVICE_NAME"
     ;;
   "start")
     echo "▶️  Starting service..."
-    COMPOSE_PROFILES=$COMPOSE_PROFILES docker-compose up -d $SERVICE_NAME
+    COMPOSE_PROFILES=$COMPOSE_PROFILES docker compose up -d $SERVICE_NAME
     echo "✅ Service started!"
     ;;
   "stop")
     echo "⏹️  Stopping service..."
-    docker-compose stop $SERVICE_NAME
+    docker compose stop $SERVICE_NAME
     echo "✅ Service stopped!"
     ;;
   "logs")
     echo "📋 Showing logs..."
-    docker-compose logs -f $SERVICE_NAME
+    docker compose logs -f $SERVICE_NAME
     ;;
   "clean")
     echo "🧹 Cleaning up..."
-    docker-compose down
+    docker compose down
     docker system prune -f
     echo "✅ Cleanup completed!"
     ;;
