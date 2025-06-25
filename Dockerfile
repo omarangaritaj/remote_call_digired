@@ -20,8 +20,8 @@ COPY prisma ./prisma/
 # install nestjs CLI globally
 RUN npm install -g @nestjs/cli
 
-# Install dependencies (fix the deprecated flag)
-RUN npm ci --omit=dev
+# Install dependencies (include dev dependencies for build)
+RUN npm ci
 
 # Generate Prisma client
 RUN npx prisma generate
@@ -31,6 +31,9 @@ COPY . .
 
 # Build the application
 RUN npm run build
+
+# Clean up dev dependencies after build
+RUN npm prune --omit=dev
 
 # Create non-root user for production (commented out for GPIO access)
 # RUN groupadd -r nodejs && useradd -r -g nodejs nodejs
