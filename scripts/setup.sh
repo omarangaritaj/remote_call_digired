@@ -7,6 +7,23 @@ echo "🚀 Setting up Raspberry Pi GPIO Controller..."
 mkdir -p data
 mkdir -p logs
 
+# Verificar si Docker está instalado
+if ! command -v docker &> /dev/null; then
+    echo "❌ Docker no está instalado. Instalando Docker..."
+    curl -fsSL https://get.docker.com -o get-docker.sh
+    sudo sh get-docker.sh
+    sudo usermod -aG docker $USER
+    echo "✅ Docker instalado. Necesitas reiniciar la sesión para usar Docker sin sudo."
+fi
+
+# Verificar si Docker Compose está instalado
+if ! command -v docker-compose &> /dev/null; then
+    echo "❌ Docker Compose no está instalado. Instalando..."
+    sudo apt-get update
+    sudo apt-get install -y docker-compose
+    echo "✅ Docker Compose instalado."
+fi
+
 # Copy environment file
 if [ ! -f .env ]; then
     cp .env.example .env
