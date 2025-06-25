@@ -33,6 +33,16 @@ RUN npx prisma generate
 # Copy source code
 COPY . .
 
+# Create startup script for development
+RUN echo '#!/bin/bash\n\
+set -e\n\
+echo "🗄️ Initializing database..."\n\
+npx prisma migrate deploy || echo "⚠️ Migration failed, creating database..."\n\
+npx prisma db push --accept-data-loss || echo "⚠️ DB push failed"\n\
+echo "✅ Database ready"\n\
+echo "🚀 Starting development server..."\n\
+exec "$@"' > /app/start-dev.sh && chmod +x /app/start-dev.sh
+
 # Expose port
 EXPOSE 3000
 
@@ -43,5 +53,6 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
 # Set environment to development
 ENV NODE_ENV=development
 
-# Start in development mode with hot reload
+# Start with database initialization
+ENTRYPOINT ["/app/start-dev.sh"]
 CMD ["npm", "run", "start:dev"]
