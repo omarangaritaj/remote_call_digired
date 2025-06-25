@@ -26,7 +26,7 @@ export class AppController {
     return this.gpioService.getStatus();
   }
 
-  @Post('test/switch/:index')
+  @Get('test/switch/:index')
   async testSwitch(@Param('index', ParseIntPipe) index: number) {
     await this.gpioService.handleSwitchPress(index);
     return {
