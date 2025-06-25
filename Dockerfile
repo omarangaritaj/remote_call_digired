@@ -1,11 +1,10 @@
-FROM node:22.11.0-bullseye-slim
+FROM node:18-slim
 
-# Install system dependencies for GPIO and build tools
+# Install system dependencies for build tools (needed for native modules)
 RUN apt-get update && apt-get install -y \
-    python3 \
     make \
     g++ \
-    && npm install -g @nestjs/cli \
+    libc6-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # Create app directory
@@ -14,6 +13,9 @@ WORKDIR /app
 # Copy package files
 COPY package*.json ./
 COPY prisma ./prisma/
+
+# install nestjs CLI globally
+RUN npm install -g @nestjs/cli
 
 # Install dependencies
 RUN npm ci --only=production
