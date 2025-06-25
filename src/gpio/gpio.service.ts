@@ -4,11 +4,14 @@ import { Injectable, Logger, OnModuleDestroy } from '@nestjs/common';
 import { Gpio } from 'onoff';
 import { ApiService } from '../api/api.service';
 import { UserService } from '../user/user.service';
-import {BULB_PINS, SWITCH_PINS} from "../constants/pin.constants";
 
 @Injectable()
 export class GPIOService implements OnModuleDestroy {
   private readonly logger = new Logger(GPIOService.name);
+
+  // GPIO pin configurations
+  private readonly SWITCH_PINS = [2, 3, 4, 17, 27];
+  private readonly BULB_PINS = [18, 23, 24, 25, 8];
 
   // GPIO instances
   private switches: Gpio[] = [];
@@ -29,8 +32,8 @@ export class GPIOService implements OnModuleDestroy {
       this.logger.log('Initializing GPIO...');
 
       // Initialize switch pins (input with pull-up)
-      for (let i = 0; i < SWITCH_PINS.length; i++) {
-        const pin = SWITCH_PINS[i];
+      for (let i = 0; i < this.SWITCH_PINS.length; i++) {
+        const pin = this.SWITCH_PINS[i];
         try {
           const gpio = new Gpio(pin, 'in', 'rising', { activeLow: true });
           this.switches.push(gpio);
@@ -42,8 +45,8 @@ export class GPIOService implements OnModuleDestroy {
       }
 
       // Initialize bulb pins (output)
-      for (let i = 0; i < BULB_PINS.length; i++) {
-        const pin = BULB_PINS[i];
+      for (let i = 0; i < this.BULB_PINS.length; i++) {
+        const pin = this.BULB_PINS[i];
         try {
           const gpio = new Gpio(pin, 'out');
           await gpio.write(0); // Initially off
@@ -56,6 +59,7 @@ export class GPIOService implements OnModuleDestroy {
       }
 
       this.logger.log('✅ GPIO initialization completed');
+
     } catch (error) {
       this.logger.error('❌ GPIO initialization failed:', error);
       this.cleanup();
@@ -90,7 +94,7 @@ export class GPIOService implements OnModuleDestroy {
   }
 
   async handleSwitchPress(switchIndex: number) {
-    if (switchIndex < 0 || switchIndex >= SWITCH_PINS.length) {
+    if (switchIndex < 0 || switchIndex >= this.SWITCH_PINS.length) {
       this.logger.error(`Invalid switch index: ${switchIndex}`);
       return;
     }
@@ -99,9 +103,13 @@ export class GPIOService implements OnModuleDestroy {
 
     try {
       // Execute both actions in parallel
-      const promises = [this.turnOnBulb(switchIndex), this.sendApiRequest(switchIndex)];
+      const promises = [
+        this.turnOnBulb(switchIndex),
+        this.sendApiRequest(switchIndex),
+      ];
 
-      await Promise.all(promises);
+      await Promise.allSettled(promises);
+
     } catch (error) {
       this.logger.error(`Error handling switch ${switchIndex + 1} press:`, error);
     }
@@ -125,6 +133,7 @@ export class GPIOService implements OnModuleDestroy {
       // Turn off bulb
       await bulb.write(0);
       this.logger.log(`💡 Bulb ${bulbIndex + 1} turned OFF`);
+
     } catch (error) {
       this.logger.error(`Error controlling bulb ${bulbIndex + 1}:`, error);
     }
@@ -133,22 +142,24 @@ export class GPIOService implements OnModuleDestroy {
   private async sendApiRequest(switchIndex: number) {
     try {
       // Get a random user from database to use their token and data
-      const user = await this.userService.getUser(switchIndex);
-
+      const user = await this.userService.getRandomUser();
       if (!user) {
         this.logger.error('No users available for API request');
         return;
       }
 
+      const location = JSON.parse(user.location);
+
       const payload = {
-        status: 'calling',
-        branchId: process.env.DEVICE_ID || '',
+        location: location,
+        id: user.id,
+        branchId: user.branchId,
         isMultiService: false,
-        location: user.location,
       };
 
       await this.apiService.sendSwitchEvent(payload, user.accessToken);
       this.logger.log(`📡 API request sent successfully for switch ${switchIndex + 1}`);
+
     } catch (error) {
       this.logger.error(`Error sending API request for switch ${switchIndex + 1}:`, error);
     }
@@ -158,8 +169,8 @@ export class GPIOService implements OnModuleDestroy {
     return {
       isMonitoring: this.isMonitoring,
       switchStates: this.switchStates,
-      switchPins: SWITCH_PINS,
-      bulbPins: BULB_PINS,
+      switchPins: this.SWITCH_PINS,
+      bulbPins: this.BULB_PINS,
       switchCount: this.switches.length,
       bulbCount: this.bulbs.length,
       timestamp: new Date().toISOString(),
