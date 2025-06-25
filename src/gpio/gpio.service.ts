@@ -141,8 +141,8 @@ export class GPIOService implements OnModuleDestroy {
 
   private async sendApiRequest(switchIndex: number) {
     try {
-      // Get a random user from database to use their token and data
-      const user = await this.userService.getRandomUser();
+      const user = await this.userService.getUser(switchIndex);
+
       if (!user) {
         this.logger.error('No users available for API request');
         return;
