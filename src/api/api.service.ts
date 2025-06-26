@@ -77,7 +77,6 @@ export class ApiService {
       return response.data;
     } catch (error) {
       this.logger.error('❌ Failed to send switch event to API:', error);
-      throw error;
     }
   }
 }

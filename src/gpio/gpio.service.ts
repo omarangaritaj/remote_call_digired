@@ -1,6 +1,6 @@
 // src/gpio/gpio.service.ts
 
-import { Injectable, Logger, OnModuleDestroy } from '@nestjs/common';
+import {BadRequestException, HttpStatus, Injectable, Logger, OnModuleDestroy, UnauthorizedException} from '@nestjs/common';
 import { Gpio } from 'onoff';
 import { ApiService } from '../api/api.service';
 import { UserService } from '../user/user.service';
@@ -160,10 +160,7 @@ export class GPIOService implements OnModuleDestroy {
   }
 
   async handleSwitchPress(switchIndex: number) {
-    if (switchIndex <= 0 || switchIndex >= SWITCH_PINS.length) {
-      this.logger.error(`❌ Invalid switch index: ${switchIndex}`);
-      return;
-    }
+    if (switchIndex <= 0 || switchIndex >= SWITCH_PINS.length) throw new BadRequestException(`Invalid switch position: ${switchIndex}`);
 
     this.logger.log(`🔘 Switch ${switchIndex + 1} activated`);
 
@@ -176,7 +173,7 @@ export class GPIOService implements OnModuleDestroy {
       const [turnOnBulb, sendApiRequest ] = await Promise.all(promises);
       return { turnOnBulb, sendApiRequest };
     } catch (error) {
-      this.logger.error(`❌ Error handling switch ${switchIndex + 1}:`, error);
+      if (error.status === HttpStatus.UNAUTHORIZED) throw new UnauthorizedException(error.response.data);
     }
   }
 
@@ -213,7 +210,7 @@ export class GPIOService implements OnModuleDestroy {
   }
 
   private async sendApiRequest(switchIndex: number) {
-    try {
+    // try {
       const user = await this.userService.getUser(switchIndex);
 
       if (!user) {
@@ -229,12 +226,14 @@ export class GPIOService implements OnModuleDestroy {
       };
 
       this.logger.log(`📡 API: Sending request for switch ${switchIndex + 1} (user: ${user.userId})`);
+      const {data} = await this.apiService.sendSwitchEvent(payload, user.accessToken);
 
       this.logger.log(`✅ API: Request completed for switch ${switchIndex + 1}`);
-      return await this.apiService.sendSwitchEvent(payload, user.accessToken);
-    } catch (error) {
-      this.logger.error(`❌ API: Failed for switch ${switchIndex + 1}:`, error);
-    }
+
+      return data?.data;
+    // } catch (error) {
+    //   this.logger.error(`❌ API: Failed for switch ${switchIndex + 1}:`);
+    // }
   }
 
   getStatus() {
