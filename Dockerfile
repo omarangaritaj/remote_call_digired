@@ -1,3 +1,5 @@
+# Dockerfile
+
 FROM node:22.11.0-bullseye-slim
 
 # Install system dependencies for build tools (needed for native modules)

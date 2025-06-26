@@ -16,15 +16,15 @@ services:
       - COMPANY_ID=${COMPANY_ID}
       - DEVICE_ID=${DEVICE_ID}
       - DATABASE_URL=file:./data/dev.db
-    privileged: true  # Necessary for GPIO access
+    privileged: true
     volumes:
-      - /sys:/sys
-      - /dev:/dev
-      - ./data:/app/data  # Persist SQLite database
+      - "/sys:/sys"
+      - "/dev:/dev"
+      - ./data:/app/data
     devices:
-      - /dev/gpiomem:/dev/gpiomem
-      - /dev/gpiochip0:/dev/gpiochip0
-      - /dev/mem:/dev/mem
+      - "/dev/gpiochip0:/dev/gpiochip0"
+      - "/dev/gpiomem:/dev/gpiomem"
+      - "/dev/mem:/dev/mem"
     cap_add:
       - SYS_RAWIO
     group_add:
@@ -51,15 +51,15 @@ services:
       - DATABASE_URL=file:./data/dev.db
     privileged: true
     volumes:
-      - .:/app  # Mount source code for hot reload
+      - .:/app
       - /app/node_modules  # Exclude node_modules from mount
-      - /sys:/sys
-      - /dev:/dev
+      - "/sys:/sys"
+      - "/dev:/dev"
       - ./data:/app/data
     devices:
-      - /dev/gpiomem:/dev/gpiomem
-      - /dev/gpiochip0:/dev/gpiochip0
-      - /dev/mem:/dev/mem
+      - "/dev/gpiochip0:/dev/gpiochip0"
+      - "/dev/gpiomem:/dev/gpiomem"
+      - "/dev/mem:/dev/mem"
     cap_add:
       - SYS_RAWIO
     group_add:
