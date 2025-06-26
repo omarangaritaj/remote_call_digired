@@ -176,7 +176,7 @@ export class GPIOService implements OnModuleDestroy {
           this.logger.log('✅ GPIO test export/unexport successful');
           return testPinExists;
         } catch (testError) {
-          this.logger.warn(`⚠️ GPIO test export failed: ${testError.message}`);
+          this.logger.warn(`⚠️ GPIO test export failed: ${testError.message}`, testError);
           return false;
         }
       } catch (writeError) {
