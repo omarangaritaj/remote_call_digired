@@ -35,7 +35,7 @@ export class GPIOService implements OnModuleDestroy {
 
       if (!this.gpioAvailable) {
         this.logger.warn('⚠️ GPIO hardware not available - activating simulation mode');
-        this.logger.log('💡 Test switches using: POST /test/switch/{0-4}');
+        this.logger.log('💡 Test switches using: GET /test/switch/{1-5}');
         this.logger.log('🔧 All GPIO operations will be simulated');
         return; // Exit early - no hardware initialization
       }
@@ -166,7 +166,7 @@ export class GPIOService implements OnModuleDestroy {
 
     try {
       const promises = [
-        this.turnOnBulb(SWITCH_PINS[switchIndex - 1]),
+        this.turnOnBulb(BULB_PINS[switchIndex - 1]),
         this.sendApiRequest(SWITCH_PINS[switchIndex - 1])
       ];
 
