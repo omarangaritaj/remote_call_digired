@@ -47,7 +47,7 @@ RUN groupadd -f -g 997 gpio
 # Configurar usuario
 RUN usermod -a -G gpio node
 RUN mkdir -p /dev/gpiomem
-RUN chmod g+rw /dev/gpiomem
+RUN /bin/sh -c chmod g+rw /dev/gpiomem
 
 # Expose port
 EXPOSE 3000
