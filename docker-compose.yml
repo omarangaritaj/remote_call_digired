@@ -23,7 +23,12 @@ services:
       - ./data:/app/data  # Persist SQLite database
     devices:
       - /dev/gpiomem:/dev/gpiomem
+      - /dev/gpiochip0:/dev/gpiochip0
       - /dev/mem:/dev/mem
+    cap_add:
+      - SYS_RAWIO
+    group_add:
+      - gpio
     networks:
       - gpio-network
     profiles:
@@ -53,7 +58,12 @@ services:
       - ./data:/app/data
     devices:
       - /dev/gpiomem:/dev/gpiomem
+      - /dev/gpiochip0:/dev/gpiochip0
       - /dev/mem:/dev/mem
+    cap_add:
+      - SYS_RAWIO
+    group_add:
+      - gpio
     networks:
       - gpio-network
     profiles:

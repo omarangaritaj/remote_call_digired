@@ -40,6 +40,11 @@ RUN npm prune --omit=dev
 # RUN chown -R nodejs:nodejs /app
 # USER nodejs
 
+RUN groupadd -f -g 997 gpio
+
+# Configurar usuario
+RUN usermod -a -G gpio node
+
 # Expose port
 EXPOSE 3000
 
