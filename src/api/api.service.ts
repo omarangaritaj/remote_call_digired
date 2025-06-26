@@ -38,7 +38,6 @@ export class ApiService {
         url,
         { branchId: this.deviceId },
         {
-          timeout: 10000,
           headers: {
             'Content-Type': 'application/json',
             'User-Agent': this.userAgent,
@@ -55,13 +54,12 @@ export class ApiService {
     return response.data;
   }
 
-  async sendSwitchEvent(payload: SwitchEventPayload, accessToken: string): Promise<void> {
+  async sendSwitchEvent(payload: SwitchEventPayload, accessToken: string) {
     try {
       const url = `${this.apiUrl}/api/v1/companies/${process.env.COMPANY_ID}/queues/call-external`;
 
       const response = await firstValueFrom(
         this.httpService.post(url, payload, {
-          timeout: 10000,
           headers: {
             'Content-Type': 'application/json',
             Authorization: `Bearer ${accessToken}`,
@@ -75,6 +73,8 @@ export class ApiService {
       } else {
         this.logger.warn(`⚠️ API responded with status ${response.status}`);
       }
+
+      return response.data;
     } catch (error) {
       this.logger.error('❌ Failed to send switch event to API:', error);
       throw error;

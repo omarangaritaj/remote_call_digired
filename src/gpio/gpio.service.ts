@@ -160,7 +160,7 @@ export class GPIOService implements OnModuleDestroy {
   }
 
   async handleSwitchPress(switchIndex: number) {
-    if (switchIndex < 0 || switchIndex >= SWITCH_PINS.length) {
+    if (switchIndex <= 0 || switchIndex >= SWITCH_PINS.length) {
       this.logger.error(`❌ Invalid switch index: ${switchIndex}`);
       return;
     }
@@ -168,15 +168,13 @@ export class GPIOService implements OnModuleDestroy {
     this.logger.log(`🔘 Switch ${switchIndex + 1} activated`);
 
     try {
-      // Execute both actions in parallel
       const promises = [
-        this.turnOnBulb(switchIndex),
-        this.sendApiRequest(switchIndex)
+        this.turnOnBulb(SWITCH_PINS[switchIndex - 1]),
+        this.sendApiRequest(SWITCH_PINS[switchIndex - 1])
       ];
 
       const [turnOnBulb, sendApiRequest ] = await Promise.all(promises);
-      console.log(`✅ Actions completed for switch ${switchIndex + 1}:`, { turnOnBulb, sendApiRequest });
-
+      return { turnOnBulb, sendApiRequest };
     } catch (error) {
       this.logger.error(`❌ Error handling switch ${switchIndex + 1}:`, error);
     }
@@ -232,9 +230,8 @@ export class GPIOService implements OnModuleDestroy {
 
       this.logger.log(`📡 API: Sending request for switch ${switchIndex + 1} (user: ${user.userId})`);
 
-      await this.apiService.sendSwitchEvent(payload, user.accessToken);
       this.logger.log(`✅ API: Request completed for switch ${switchIndex + 1}`);
-
+      return await this.apiService.sendSwitchEvent(payload, user.accessToken);
     } catch (error) {
       this.logger.error(`❌ API: Failed for switch ${switchIndex + 1}:`, error);
     }

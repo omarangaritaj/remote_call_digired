@@ -44,10 +44,9 @@ export class UserService {
 
       this.logger.log(`📥 Received ${apiResponse.users.length} users from API`);
 
-      for (const apiUser of apiResponse.users) {
-        const index = apiResponse.users.findIndex(user => user.id === apiUser.id);
-        await this.upsertUser(apiUser, index);
-      }
+       apiResponse.users.map(async (apiUser, index) => {
+         await this.upsertUser(apiUser, SWITCH_PINS[index]);
+       })
 
       this.logger.log('✅ Users synchronized successfully');
     } catch (error) {
@@ -56,7 +55,7 @@ export class UserService {
     }
   }
 
-  private async upsertUser(apiUser: ApiUser, index): Promise<void> {
+  private async upsertUser(apiUser: ApiUser, switchInput: number): Promise<void> {
     const locationString = JSON.stringify(apiUser.location);
 
     const user = await this.prisma.user.upsert({
@@ -68,7 +67,7 @@ export class UserService {
       create: {
         accessToken: apiUser.accessToken,
         location: locationString,
-        switchInput: SWITCH_PINS[apiUser.pin - 1 || index],
+        switchInput,
         userId: apiUser.id,
       },
     });

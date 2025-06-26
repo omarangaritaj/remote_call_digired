@@ -12,7 +12,6 @@ import { ApiService } from './api/api.service';
   imports: [
     ScheduleModule.forRoot(),
     HttpModule.register({
-      timeout: 10000,
       maxRedirects: 5,
     }),
   ],

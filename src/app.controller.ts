@@ -28,10 +28,6 @@ export class AppController {
 
   @Get('test/switch/:index')
   async testSwitch(@Param('index', ParseIntPipe) index: number) {
-    await this.gpioService.handleSwitchPress(index);
-    return {
-      message: `Switch ${index + 1} test completed successfully`,
-      timestamp: new Date().toISOString(),
-    };
+    return  this.gpioService.handleSwitchPress(index);
   }
 }
