@@ -1,212 +1,224 @@
-# Raspberry Pi GPIO Controller
+# Raspberry Pi GPIO Controller (FastAPI)
 
-Aplicación FastAPI para controlar interruptores y bombillos en Raspberry Pi con integración a API en la nube.
+Un controlador GPIO para Raspberry Pi 4B desarrollado con FastAPI que gestiona switches físicos y bombillas LED, con integración a API externa y base de datos SQLite.
 
 ## 🚀 Características
 
-- **5 Interruptores GPIO** que activan bombillos por 2 segundos
-- **5 Bombillos LED** controlados independientemente
-- **Peticiones HTTP POST** automáticas a API en la nube
-- **Autenticación** con Bearer Token y API Key
-- **UUIDs únicos** para cada interruptor
-- **Contenedor Docker** para fácil despliegue
-- **Variables de entorno** para configuración segura
+- **Control GPIO**: Manejo de 5 switches de entrada y 5 LEDs de salida
+- **Modo Simulación**: Funciona sin hardware GPIO para desarrollo y testing
+- **API REST**: Endpoints para control y monitoreo
+- **Base de Datos**: Gestión de usuarios con SQLite
+- **Monitoreo en Tiempo Real**: Detección de eventos GPIO asíncrona
+- **Docker Support**: Contenedorización completa
+- **Logging Avanzado**: Logs estructurados con Loguru
 
-## 🔧 Hardware Requerido
+## 📋 Prerequisitos
 
-### Componentes
-- Raspberry Pi 4 (o modelo compatible)
-- 5 Interruptores (push buttons)
-- 5 LEDs
-- 5 Resistencias 220Ω (para LEDs)
-- Resistencias pull-up internas (configuradas por software)
-- Protoboard y cables jumper
+### Hardware
+- Raspberry Pi 4B
+- 5 switches/botones conectados a GPIO pins: 3, 4, 17, 27, 22
+- 5 LEDs conectados a GPIO pins: 18, 23, 24, 25, 8
+- Resistencias apropiadas para LEDs y pull-up para switches
 
-### Conexiones GPIO
+### Software
+- Python 3.11+
+- RPi.GPIO (solo en Raspberry Pi)
+- SQLite
 
-#### Interruptores (con pull-up interno)
-- **Interruptor 1**: GPIO 2 → GND
-- **Interruptor 2**: GPIO 3 → GND  
-- **Interruptor 3**: GPIO 4 → GND
-- **Interruptor 4**: GPIO 17 → GND
-- **Interruptor 5**: GPIO 27 → GND
+## 🛠️ Instalación
 
-#### Bombillos LED
-- **LED 1**: GPIO 18 → Resistencia 220Ω → LED → GND
-- **LED 2**: GPIO 23 → Resistencia 220Ω → LED → GND
-- **LED 3**: GPIO 24 → Resistencia 220Ω → LED → GND
-- **LED 4**: GPIO 25 → Resistencia 220Ω → LED → GND
-- **LED 5**: GPIO 8 → Resistencia 220Ω → LED → GND
-
-## 📦 Instalación
-
-### 1. Clonar o descargar los archivos
+### 1. Clonar el repositorio
 ```bash
-# Crear directorio del proyecto
-mkdir raspberry-gpio-controller
-cd raspberry-gpio-controller
-
-# Copiar todos los archivos del proyecto aquí
+git clone <repository-url>
+cd gpio-controller-fastapi
 ```
 
-### 2. Ejecutar script de configuración
+### 2. Crear entorno virtual
 ```bash
-chmod +x setup.sh
-./setup.sh
+python -m venv venv
+source venv/bin/activate  # En Windows: venv\Scripts\activate
 ```
 
-### 3. Configurar variables de entorno
+### 3. Instalar dependencias
 ```bash
-# Editar archivo .env con tus credenciales
-nano .env
+pip install -r requirements.txt
 ```
 
-Ejemplo de configuración:
-```env
-API_URL=https://tu-api.ejemplo.com/switches
-API_KEY=tu-api-key-secreta
-API_TOKEN=tu-bearer-token-jwt
-DEVICE_ID=raspberry-pi-sala-principal
-```
-
-### 4. Construir y ejecutar
+### 4. Configurar variables de entorno
 ```bash
-# Construir imagen Docker
-docker-compose build
-
-# Ejecutar en background
-docker-compose up -d
-
-# Ver logs en tiempo real
-docker-compose logs -f
+cp .env.example .env
+# Editar .env con tus valores
 ```
 
-## 🔑 UUIDs de Interruptores
-
-Cada interruptor tiene un UUID único predefinido:
-
-- **Interruptor 1**: `550e8400-e29b-41d4-a716-446655440001`
-- **Interruptor 2**: `550e8400-e29b-41d4-a716-446655440002`
-- **Interruptor 3**: `550e8400-e29b-41d4-a716-446655440003`
-- **Interruptor 4**: `550e8400-e29b-41d4-a716-446655440004`
-- **Interruptor 5**: `550e8400-e29b-41d4-a716-446655440005`
-
-## 📡 API Integration
-
-### Formato de Petición POST
-
-```json
-{
-  "device_id": "raspberry-pi-001",
-  "switch_uuid": "550e8400-e29b-41d4-a716-446655440001",
-  "timestamp": "2025-06-06T15:30:45Z",
-  "status": "activated"
-}
-```
-
-### Headers HTTP
-```
-Content-Type: application/json
-Authorization: Bearer {API_TOKEN}
-X-API-Key: {API_KEY}
-User-Agent: RaspberryPi-GPIO-Controller/1.0
-```
-
-## 🌐 Endpoints FastAPI
-
-### Información del Sistema
-- `GET /` - Estado general del controlador
-- `GET /status` - Estado detallado de interruptores
-- `GET /health` - Verificación de salud
-
-### Testing Manual
-- `POST /test/switch/{switch_index}` - Probar interruptor manualmente
-
-Ejemplo:
+### 5. Crear directorio de datos
 ```bash
-curl -X POST http://localhost:8000/test/switch/0
+mkdir -p data
 ```
 
-## 🐳 Comandos Docker
+## 🏃‍♂️ Ejecución
 
+### Desarrollo
 ```bash
-# Ver logs
-docker-compose logs -f
-
-# Reiniciar servicio
-docker-compose restart
-
-# Detener servicio
-docker-compose down
-
-# Reconstruir imagen
-docker-compose build --no-cache
-
-# Estado del contenedor
-docker-compose ps
+python run_dev.py
 ```
 
-## 🔧 Troubleshooting
-
-### Problemas GPIO
+### Producción
 ```bash
-# Verificar permisos GPIO
-ls -l /dev/gpiomem
-
-# Agregar usuario a grupo gpio
-sudo usermod -a -G gpio $USER
-
-# Reiniciar para aplicar cambios
-sudo reboot
+python main.py
 ```
 
-### Problemas de Red
+### Con Docker
 ```bash
-# Verificar conectividad
-ping 8.8.8.8
+# Construir imagen
+docker build -t gpio-controller .
 
-# Probar API endpoint
-curl -X POST https://tu-api.com/endpoint \
-  -H "Authorization: Bearer tu-token" \
-  -H "Content-Type: application/json" \
-  -d '{"test": true}'
+# Ejecutar contenedor
+docker run -p 3000:3000 \
+  --privileged \
+  --device /dev/gpiomem \
+  -v $(pwd)/data:/app/data \
+  -v /sys:/sys:ro \
+  -v /dev:/dev \
+  --env-file .env \
+  gpio-controller
 ```
 
-### Logs Detallados
+### Con Docker Compose
 ```bash
-# Ver logs completos
-docker-compose logs --tail=100 -f
-
-# Entrar al contenedor
-docker-compose exec gpio-controller bash
-```
-
-## 🔒 Seguridad
-
-- ✅ Credenciales en variables de entorno
-- ✅ Usuario no-root en contenedor
-- ✅ Timeouts en peticiones HTTP
-- ✅ Validación de entrada
-- ✅ Logging de eventos
-
-## 📊 Monitoreo
-
-La aplicación proporciona logs detallados para:
-- Activación de interruptores
-- Estado de bombillos
-- Peticiones HTTP exitosas/fallidas
-- Errores de GPIO o red
-
-## 🔄 Actualización
-
-```bash
-# Detener servicio
-docker-compose down
-
-# Actualizar código
-# (copiar nuevos archivos)
-
-# Reconstruir y reiniciar
-docker-compose build
 docker-compose up -d
 ```
+
+## 📡 API Endpoints
+
+### Información General
+- `GET /` - Información de la aplicación
+- `GET /health` - Estado de salud del sistema
+- `GET /status` - Estado del servicio GPIO
+
+### Testing
+- `GET /test/switch/{1-5}` - Simular presión de switch
+
+## 🔧 Configuración
+
+### Variables de Entorno
+
+| Variable | Descripción | Valor por defecto |
+|----------|-------------|-------------------|
+| `API_URL` | URL de la API externa | - |
+| `API_ENDPOINT` | Endpoint de la API | - |
+| `DEVICE_ID` | ID del dispositivo | `raspberry-pi-001` |
+| `COMPANY_ID` | ID de la compañía | - |
+| `DATABASE_URL` | URL de la base de datos | `sqlite:///./data/dev.db` |
+| `PORT` | Puerto del servidor | `3000` |
+| `ENVIRONMENT` | Entorno de ejecución | `development` |
+| `ENABLE_GPIO` | Habilitar GPIO | `true` |
+
+### Configuración GPIO
+
+Los pines están definidos en `app/constants/pin_constants.py`:
+
+```python
+SWITCH_PINS = [3, 4, 17, 27, 22]
+BULB_PINS = [18, 23, 24, 25, 8]
+```
+
+## 🏗️ Arquitectura
+
+```
+app/
+├── constants/          # Constantes del proyecto
+│   └── pin_constants.py
+├── controllers/        # Controladores HTTP
+│   └── app_controller.py
+├── core/              # Configuración central
+│   ├── config.py
+│   └── database.py
+├── models/            # Modelos Pydantic
+│   └── models.py
+└── services/          # Lógica de negocio
+    ├── api_service.py
+    ├── gpio_service.py
+    └── user_service.py
+```
+
+## 🔄 Flujo de Trabajo
+
+1. **Inicialización**:
+    - Verificación de hardware GPIO
+    - Conexión a base de datos
+    - Sincronización de usuarios desde API
+    - Inicio de monitoreo GPIO
+
+2. **Detección de Evento**:
+    - Switch presionado → GPIO interrupt
+    - Activación de LED correspondiente (2 segundos)
+    - Envío de evento a API externa
+
+3. **Modo Simulación**:
+    - Sin hardware GPIO disponible
+    - Endpoints de testing funcionales
+    - Logs de simulación detallados
+
+## 🐛 Debugging
+
+### Logs
+Los logs incluyen emojis para fácil identificación:
+- 🚀 Inicialización
+- ✅ Éxito
+- ❌ Error
+- ⚠️ Advertencia
+- 🔘 Evento de switch
+- 💡 Control de LED
+- 📡 Comunicación API
+
+### Modo Simulación
+Si GPIO no está disponible:
+```bash
+# Usar endpoints de testing
+curl http://localhost:3000/test/switch/1
+curl http://localhost:3000/test/switch/2
+# ... etc
+```
+
+### Verificar Estado
+```bash
+curl http://localhost:3000/status
+```
+
+## 🔒 Consideraciones de Seguridad
+
+- El contenedor Docker requiere modo privilegiado para acceso GPIO
+- Las credenciales de API se manejan via variables de entorno
+- SQLite local para almacenamiento de tokens de acceso
+
+
+## 🚀 Producción
+
+### Recomendaciones:
+1. Usar un reverse proxy (nginx)
+2. Configurar log rotation
+3. Implementar health checks
+4. Usar variables de entorno para secrets
+5. Configurar restart automático del servicio
+
+### Systemd Service (opcional):
+```ini
+[Unit]
+Description=GPIO Controller FastAPI
+After=network.target
+
+[Service]
+Type=simple
+User=pi
+WorkingDirectory=/home/pi/gpio-controller-fastapi
+Environment=PATH=/home/pi/gpio-controller-fastapi/venv/bin
+ExecStart=/home/pi/gpio-controller-fastapi/venv/bin/python main.py
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
+```
+
+## 📄 Licencia
+
+Este proyecto está bajo la licencia MIT.

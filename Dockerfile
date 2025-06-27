@@ -1,27 +1,33 @@
+# Use Python 3.11 slim image
 FROM python:3.11-slim
 
-# Instalar dependencias del sistema necesarias para GPIO
+# Set working directory
+WORKDIR /app
+
+# Install system dependencies
 RUN apt-get update && apt-get install -y \
     gcc \
     python3-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# Crear directorio de trabajo
-WORKDIR /app
-
-# Copiar requirements y instalar dependencias Python
+# Copy requirements first for better caching
 COPY requirements.txt .
+
+# Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copiar código de la aplicación
-COPY main.py .
+# Copy application code
+COPY . .
 
-# Exponer puerto
-EXPOSE 8000
+# Create data directory for SQLite
+RUN mkdir -p /app/data
 
-# No cambiar a usuario no-root para acceso GPIO
-# RUN useradd -m -u 1000 appuser && chown -R appuser:appuser /app
-# USER appuser
+# Expose port
+EXPOSE 3000
 
-# Comando para ejecutar la aplicación
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Set environment variables
+ENV PYTHONPATH=/app
+ENV PORT=3000
+
+# Run the application
+CMD ["python", "main.py"]
