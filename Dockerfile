@@ -9,7 +9,6 @@ RUN apt-get update && apt-get install -y \
     make \
     g++ \
     libc6-dev \
-    curl \
     && rm -rf /var/lib/apt/lists/*
 
 # Create app directory
@@ -51,10 +50,6 @@ RUN usermod -a -G gpio node
 
 # Expose port
 EXPOSE 3000
-
-# Health check
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD curl -f http://localhost:3000/health || exit 1
 
 # Start the server
 CMD ["npm", "run", "start:prod"]

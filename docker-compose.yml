@@ -38,7 +38,7 @@ services:
   gpio-controller-dev:
     build:
       context: .
-      dockerfile: Dockerfile.dev
+      dockerfile: Dockerfile_dev
     container_name: gpio-dev
     ports:
       - "3000:3000"
