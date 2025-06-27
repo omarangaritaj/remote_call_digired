@@ -19,7 +19,9 @@
     "noFallthroughCasesInSwitch": false,
     "moduleResolution": "node",
     "esModuleInterop": true,
-    "typeRoots": ["./node_modules/@types"]
+    "lib": ["ES2023"],
+    "types": ["node"],
+    "resolveJsonModule": true
   },
   "exclude": [
     "node_modules",
