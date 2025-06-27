@@ -5,7 +5,7 @@ import { HttpService } from '@nestjs/axios';
 import { firstValueFrom } from 'rxjs';
 import { AxiosResponse, HttpStatusCode } from 'axios';
 import { ApiResponse, UserLocation } from '../user/user.service';
-import * as process from 'node:process';
+import * as process from 'process';
 
 export interface SwitchEventPayload {
   location: UserLocation;
