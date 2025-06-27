@@ -6,7 +6,7 @@ import { ApiService } from '../api/api.service';
 import { UserService } from '../user/user.service';
 import { BULB_PINS, SWITCH_PINS } from '../constants/pin.constants';
 import * as fs from 'fs';
-import * as process from 'process';
+import * as process from 'node:process';
 
 @Injectable()
 export class GPIOService implements OnModuleDestroy {

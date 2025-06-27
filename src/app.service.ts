@@ -3,7 +3,7 @@
 import { Injectable, OnModuleInit, Logger } from '@nestjs/common';
 import { UserService } from './user/user.service';
 import { GPIOService } from './gpio/gpio.service';
-import * as process from 'process';
+import * as process from 'node:process';
 
 @Injectable()
 export class AppService implements OnModuleInit {

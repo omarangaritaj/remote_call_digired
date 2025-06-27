@@ -3,7 +3,7 @@
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe, Logger } from '@nestjs/common';
 import { AppModule } from './app.module';
-import * as process from 'process';
+import * as process from 'node:process';
 
 async function bootstrap() {
   const logger = new Logger('Bootstrap');
