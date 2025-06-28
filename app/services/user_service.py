@@ -6,8 +6,60 @@ from loguru import logger
 
 from app.core.database import database, users_table
 from app.services.api_service import ApiService
-from app.models.models import ApiUser, User
+from app.models.models import ApiUser
 from app.constants.pin_constants import SWITCH_PINS
+from app.core.config import is_prod_env
+
+
+def _upsert_user(api_user: ApiUser, switch_input: int) -> None:
+    """Insert or update user in database"""
+    location_string = json.dumps(api_user.location.model_dump())
+
+    # Check if user exists
+    query = users_table.select().where(users_table.c.userId == api_user.id)
+    existing_user = database.fetch_one(query)
+
+    if existing_user:
+        # Update existing user
+        query = users_table.update().where(
+            users_table.c.userId == api_user.id
+        ).values(
+            accessToken=api_user.accessToken,
+            location=location_string,
+        )
+        database.execute(query)
+    else:
+        # Create new user
+        query = users_table.insert().values(
+            userId=api_user.id,
+            accessToken=api_user.accessToken,
+            location=location_string,
+            switchInput=switch_input,
+        )
+        database.execute(query)
+
+    logger.info(f"👤 User {api_user.id} synchronized")
+
+
+async def get_user(switch_index: int) -> Optional[Dict[str, Any]]:
+    """Get user by switch index"""
+    try:
+        query = users_table.select().where(users_table.c.switchInput == switch_index)
+        user_record = await database.fetch_one(query)
+
+        if not user_record:
+            logger.error("No users found")
+            return None
+
+        # Convert record to dict and parse location JSON
+        user_dict = dict(user_record)
+        user_dict["location"] = json.loads(user_dict["location"])
+
+        return user_dict
+
+    except Exception as error:
+        logger.error(f"Error fetching user: {error}")
+        raise
 
 
 class UserService:
@@ -30,64 +82,16 @@ class UserService:
             # Process users sequentially to avoid database conflicts
             for index, api_user in enumerate(api_response.users):
                 if index < len(SWITCH_PINS):
-                    await self._upsert_user(api_user, SWITCH_PINS[index])
+                    _upsert_user(api_user, SWITCH_PINS[index])
 
             logger.info("✅ Users synchronized successfully")
 
-            all_users = database.fetch_all(users_table.select())
-
-            for user in all_users:
-                logger.info(dict(user))
+            if not is_prod_env:
+                logger.warning("🔒 Sensitive data not logged in production environment")
+                all_users = database.fetch_all(users_table.select())
+                print("All users in database:", all_users)
+                logger.warning("🔒 Sensitive data not logged in production environment")
 
         except Exception as error:
             logger.error(f"❌ Failed to fetch and store users: {error}")
-            raise
-
-    async def _upsert_user(self, api_user: ApiUser, switch_input: int) -> None:
-        """Insert or update user in database"""
-        location_string = json.dumps(api_user.location.model_dump())
-
-        # Check if user exists
-        query = users_table.select().where(users_table.c.userId == api_user.id)
-        existing_user = database.fetch_one(query)
-
-        if existing_user:
-            # Update existing user
-            query = users_table.update().where(
-                users_table.c.userId == api_user.id
-            ).values(
-                accessToken=api_user.accessToken,
-                location=location_string,
-            )
-            database.execute(query)
-        else:
-            # Create new user
-            query = users_table.insert().values(
-                userId=api_user.id,
-                accessToken=api_user.accessToken,
-                location=location_string,
-                switchInput=switch_input,
-            )
-            database.execute(query)
-
-        logger.info(f"👤 User {api_user.id} synchronized")
-
-    async def get_user(self, switch_index: int) -> Optional[Dict[str, Any]]:
-        """Get user by switch index"""
-        try:
-            query = users_table.select().where(users_table.c.switchInput == switch_index)
-            user_record = await database.fetch_one(query)
-
-            if not user_record:
-                logger.error("No users found")
-                return None
-
-            # Convert record to dict and parse location JSON
-            user_dict = dict(user_record)
-            user_dict["location"] = json.loads(user_dict["location"])
-
-            return user_dict
-
-        except Exception as error:
-            logger.error(f"Error fetching user: {error}")
             raise

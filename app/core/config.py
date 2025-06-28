@@ -28,3 +28,4 @@ class Settings(BaseSettings):
 
 
 settings = Settings()
+is_prod_env = settings.environment == "production"

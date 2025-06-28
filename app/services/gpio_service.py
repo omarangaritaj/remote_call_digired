@@ -283,7 +283,7 @@ class GPIOService:
     async def _send_api_request(self, switch_index: int) -> Dict[str, Any]:
         """Send API request for switch press"""
         try:
-            user = await self.user_service.get_user(switch_index)
+            user = await get_user(switch_index)
 
             if not user:
                 logger.error(f"❌ No user found for switch pin {switch_index}")

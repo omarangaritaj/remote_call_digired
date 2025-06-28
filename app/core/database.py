@@ -9,6 +9,7 @@ from sqlalchemy import (
     func
 )
 from sqlalchemy.engine import Engine
+from app.core.config import settings, is_prod_env
 
 # Configuración de metadatos
 metadata = MetaData()
@@ -28,11 +29,13 @@ users_table = Table(
 
 class Database:
     def __init__(self):
-        # Crear engine para base de datos en memoria
+        place_database_url = settings.database_url or "sqlite:///:memory:"
+
         self.engine: Engine = create_engine(
-            "sqlite://database.db",  # Cambia a "sqlite:///:memory:" para usar en memoria
-            echo=True  # Para ver las consultas SQL en consola
+            place_database_url,
+            echo = not is_prod_env
         )
+
         # Crear todas las tablas
         metadata.create_all(self.engine)
 
@@ -58,8 +61,13 @@ class Database:
 
     def execute(self, query):
         """Ejecuta una consulta sin retornar resultados"""
-        with self.engine.connect() as connection:
+        with self.engine.begin() as connection:
             connection.execute(query)
+
+    def close(self):
+        """Cierra la conexión a la base de datos"""
+        self.engine.dispose()
+        print("Database connection closed.")
 
 # Exportar la instancia de database
 database = Database()
