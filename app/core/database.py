@@ -13,6 +13,8 @@ data_dir = os.path.dirname(settings.database_url.replace("file:", ""))
 if data_dir and not os.path.exists(data_dir):
     os.makedirs(data_dir, exist_ok=True)
 
+print(f"Data directory created at: {settings.database_url}")
+
 # Database instance
 database = databases.Database(f"{settings.database_url.replace("file:", "sqlite://")}")
 
