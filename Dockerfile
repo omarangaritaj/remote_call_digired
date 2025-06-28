@@ -11,10 +11,17 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy requirements first for better caching
-COPY requirements.txt .
+COPY requirements*.txt ./
+COPY install.sh ./
+
+# Make install script executable
+RUN chmod +x install.sh
 
 # Install Python dependencies
-RUN pip install --no-cache-dir -r requirements.txt
+# Use INSTALL_GPIO=true to install GPIO support in Docker
+ARG INSTALL_GPIO=true
+ENV INSTALL_GPIO=${INSTALL_GPIO}
+RUN ./install.sh
 
 # Copy application code
 COPY . .

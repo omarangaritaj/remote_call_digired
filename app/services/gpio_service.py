@@ -16,9 +16,35 @@ from app.core.config import settings
 try:
     import RPi.GPIO as GPIO
     GPIO_AVAILABLE = True
+    logger.info("📦 RPi.GPIO library loaded successfully")
 except ImportError:
     GPIO_AVAILABLE = False
-    logger.warning("⚠️ RPi.GPIO not available - will run in simulation mode")
+    logger.warning("⚠️ RPi.GPIO not available - running in simulation mode")
+    logger.info("💡 This is normal on non-Raspberry Pi systems")
+
+    # Create a mock GPIO class for development
+    class MockGPIO:
+        BCM = "BCM"
+        IN = "IN"
+        OUT = "OUT"
+        HIGH = 1
+        LOW = 0
+        PUD_UP = "PUD_UP"
+
+        @staticmethod
+        def setmode(mode): pass
+        @staticmethod
+        def setwarnings(warnings): pass
+        @staticmethod
+        def setup(pin, mode, pull_up_down=None): pass
+        @staticmethod
+        def input(pin): return 0
+        @staticmethod
+        def output(pin, value): pass
+        @staticmethod
+        def cleanup(): pass
+
+    GPIO = MockGPIO()
 
 
 class GPIOService:

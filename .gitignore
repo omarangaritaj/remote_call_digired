@@ -43,3 +43,4 @@ pnpm-lock.yaml
 **/**/i18n.generated.ts
 
 *.db
+venv
