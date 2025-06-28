@@ -39,9 +39,34 @@ python -m venv venv
 source venv/bin/activate  # En Windows: venv\Scripts\activate
 ```
 
-### 3. Instalar dependencias
+## 🛠️ Instalación
+
+### Método Automático (Recomendado)
 ```bash
-pip install -r requirements.txt
+# Hace la instalación automáticamente según el entorno
+chmod +x install.sh
+./install.sh
+```
+
+### Método Manual
+
+#### En Desarrollo (sin hardware GPIO)
+```bash
+pip install -r requirements-dev.txt
+```
+
+#### En Raspberry Pi
+```bash
+pip install -r requirements-pi.txt
+```
+
+#### En Docker
+```bash
+# Con soporte GPIO
+docker build --build-arg INSTALL_GPIO=true -t gpio-controller .
+
+# Sin soporte GPIO (solo simulación)
+docker build --build-arg INSTALL_GPIO=false -t gpio-controller .
 ```
 
 ### 4. Configurar variables de entorno
@@ -144,20 +169,20 @@ app/
 ## 🔄 Flujo de Trabajo
 
 1. **Inicialización**:
-    - Verificación de hardware GPIO
-    - Conexión a base de datos
-    - Sincronización de usuarios desde API
-    - Inicio de monitoreo GPIO
+   - Verificación de hardware GPIO
+   - Conexión a base de datos
+   - Sincronización de usuarios desde API
+   - Inicio de monitoreo GPIO
 
 2. **Detección de Evento**:
-    - Switch presionado → GPIO interrupt
-    - Activación de LED correspondiente (2 segundos)
-    - Envío de evento a API externa
+   - Switch presionado → GPIO interrupt
+   - Activación de LED correspondiente (2 segundos)
+   - Envío de evento a API externa
 
 3. **Modo Simulación**:
-    - Sin hardware GPIO disponible
-    - Endpoints de testing funcionales
-    - Logs de simulación detallados
+   - Sin hardware GPIO disponible
+   - Endpoints de testing funcionales
+   - Logs de simulación detallados
 
 ## 🐛 Debugging
 
