@@ -1,25 +1,19 @@
-# app/core/database.py
+from sqlalchemy import (
+    create_engine,
+    MetaData,
+    Table,
+    Column,
+    Integer,
+    String,
+    DateTime,
+    func
+)
+from sqlalchemy.engine import Engine
 
-import os
-import databases
-import sqlalchemy
-from sqlalchemy import MetaData, Table, Column, Integer, String, DateTime
-from sqlalchemy.sql import func
-
-from app.core.config import settings
-
-# Ensure data directory exists
-data_dir = os.path.dirname(settings.database_url.replace("file:", ""))
-if data_dir and not os.path.exists(data_dir):
-    os.makedirs(data_dir, exist_ok=True)
-
-# Database instance
-database = databases.Database(f"{settings.database_url.replace('file:', 'sqlite://')}")
-
-# SQLAlchemy metadata
+# Configuración de metadatos
 metadata = MetaData()
 
-# Users table definition
+# Definición de la tabla users
 users_table = Table(
     "users",
     metadata,
@@ -32,11 +26,23 @@ users_table = Table(
     Column("updatedAt", DateTime, default=func.now(), onupdate=func.now()),
 )
 
-# Create engine
-engine = sqlalchemy.create_engine(
-    settings.database_url,
-    connect_args={"check_same_thread": False} if "sqlite" in settings.database_url else {}
-)
+class Database:
+    def __init__(self):
+        # Crear engine para base de datos en memoria
+        self.engine: Engine = create_engine(
+            "sqlite://",
+            echo=True  # Para ver las consultas SQL en consola
+        )
+        # Crear todas las tablas
+        metadata.create_all(self.engine)
 
-# Create tables
-metadata.create_all(engine)
+    def connect(self):
+        """Retorna una conexión a la base de datos"""
+        return self.engine.connect()
+
+    def get_engine(self):
+        """Retorna el engine de SQLAlchemy"""
+        return self.engine
+
+# Exportar la instancia de database
+database = Database()
