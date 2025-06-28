@@ -15,7 +15,7 @@ class ApiUser(BaseModel):
     id: str
     accessToken: str
     location: UserLocation
-    pin: int
+    pin: Optional[int] = None
 
 
 class ApiResponse(BaseModel):

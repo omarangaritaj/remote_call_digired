@@ -34,6 +34,11 @@ class UserService:
 
             logger.info("✅ Users synchronized successfully")
 
+            all_users = database.fetch_all(users_table.select())
+
+            for user in all_users:
+                logger.info(dict(user))
+
         except Exception as error:
             logger.error(f"❌ Failed to fetch and store users: {error}")
             raise
@@ -44,7 +49,7 @@ class UserService:
 
         # Check if user exists
         query = users_table.select().where(users_table.c.userId == api_user.id)
-        existing_user = await database.fetch_one(query)
+        existing_user = database.fetch_one(query)
 
         if existing_user:
             # Update existing user
@@ -54,7 +59,7 @@ class UserService:
                 accessToken=api_user.accessToken,
                 location=location_string,
             )
-            await database.execute(query)
+            database.execute(query)
         else:
             # Create new user
             query = users_table.insert().values(
@@ -63,7 +68,7 @@ class UserService:
                 location=location_string,
                 switchInput=switch_input,
             )
-            await database.execute(query)
+            database.execute(query)
 
         logger.info(f"👤 User {api_user.id} synchronized")
 

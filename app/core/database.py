@@ -30,7 +30,7 @@ class Database:
     def __init__(self):
         # Crear engine para base de datos en memoria
         self.engine: Engine = create_engine(
-            "sqlite://",
+            "sqlite://database.db",  # Cambia a "sqlite:///:memory:" para usar en memoria
             echo=True  # Para ver las consultas SQL en consola
         )
         # Crear todas las tablas
@@ -43,6 +43,23 @@ class Database:
     def get_engine(self):
         """Retorna el engine de SQLAlchemy"""
         return self.engine
+
+    def fetch_one(self, query):
+        """Ejecuta una consulta y retorna un único resultado"""
+        with self.engine.connect() as connection:
+            result = connection.execute(query)
+            return result.fetchone()
+
+    def fetch_all(self, query):
+        """Ejecuta una consulta y retorna todos los resultados"""
+        with self.engine.connect() as connection:
+            result = connection.execute(query)
+            return result.fetchall()
+
+    def execute(self, query):
+        """Ejecuta una consulta sin retornar resultados"""
+        with self.engine.connect() as connection:
+            connection.execute(query)
 
 # Exportar la instancia de database
 database = Database()
