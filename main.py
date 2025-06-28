@@ -22,7 +22,7 @@ async def lifespan(app: FastAPI):
 
     try:
         # Connect to database
-        await database.connect()
+        database.connect()
         logger.info("✅ Database connected successfully")
 
         # Initialize services
