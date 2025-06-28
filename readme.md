@@ -35,7 +35,7 @@ cd gpio-controller-fastapi
 
 ### 2. Crear entorno virtual
 ```bash
-python -m venv venv
+python3 -m venv venv
 source venv/bin/activate  # En Windows: venv\Scripts\activate
 ```
 

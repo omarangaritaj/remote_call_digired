@@ -1,11 +1,17 @@
 # app/core/database.py
 
+import os
 import databases
 import sqlalchemy
 from sqlalchemy import MetaData, Table, Column, Integer, String, DateTime
 from sqlalchemy.sql import func
 
 from app.core.config import settings
+
+# Ensure data directory exists
+data_dir = os.path.dirname(settings.database_url.replace("sqlite:///", ""))
+if data_dir and not os.path.exists(data_dir):
+    os.makedirs(data_dir, exist_ok=True)
 
 # Database instance
 database = databases.Database(settings.database_url)
@@ -28,7 +34,7 @@ users_table = Table(
 
 # Create engine
 engine = sqlalchemy.create_engine(
-    settings.database_url.replace("sqlite:///", "sqlite:///"),
+    settings.database_url,
     connect_args={"check_same_thread": False} if "sqlite" in settings.database_url else {}
 )
 
