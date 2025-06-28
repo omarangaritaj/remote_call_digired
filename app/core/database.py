@@ -9,12 +9,12 @@ from sqlalchemy.sql import func
 from app.core.config import settings
 
 # Ensure data directory exists
-data_dir = os.path.dirname(settings.database_url.replace("sqlite:///", ""))
+data_dir = os.path.dirname(settings.database_url.replace("file:", ""))
 if data_dir and not os.path.exists(data_dir):
     os.makedirs(data_dir, exist_ok=True)
 
 # Database instance
-database = databases.Database(settings.database_url)
+database = databases.Database(f"{settings.database_url.replace("file:", "sqlite://")}")
 
 # SQLAlchemy metadata
 metadata = MetaData()
