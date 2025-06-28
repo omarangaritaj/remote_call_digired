@@ -10,24 +10,31 @@ RUN apt-get update && apt-get install -y \
     python3-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy requirements first for better caching
+# Upgrade pip
+RUN pip install --upgrade pip
+
+# Create data directory
+RUN mkdir -p /app/data
+
+# Copy requirements files
 COPY requirements*.txt ./
-COPY install.sh ./
 
-# Make install script executable
-RUN chmod +x install.sh
+# Install base requirements first
+RUN pip install --no-cache-dir -r requirements.txt
 
-# Install Python dependencies
-# Use INSTALL_GPIO=true to install GPIO support in Docker
+# Install GPIO support if needed
 ARG INSTALL_GPIO=true
-ENV INSTALL_GPIO=${INSTALL_GPIO}
-RUN ./install.sh
+RUN if [ "$INSTALL_GPIO" = "true" ] ; then \
+        echo "Installing GPIO support..." && \
+        pip install --no-cache-dir RPi.GPIO==0.7.1 ; \
+    fi
+
+# Verify critical packages
+RUN python -c "import uvicorn, fastapi; print('✅ Critical packages verified')"
 
 # Copy application code
 COPY . .
 
-# Create data directory for SQLite
-RUN mkdir -p /app/data
 
 # Expose port
 EXPOSE 3000
