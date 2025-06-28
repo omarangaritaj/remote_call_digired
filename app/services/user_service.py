@@ -41,27 +41,6 @@ def _upsert_user(api_user: ApiUser, switch_input: int) -> None:
     logger.info(f"👤 User {api_user.id} synchronized")
 
 
-async def get_user(switch_index: int) -> Optional[Dict[str, Any]]:
-    """Get user by switch index"""
-    try:
-        query = users_table.select().where(users_table.c.switchInput == switch_index)
-        user_record = await database.fetch_one(query)
-
-        if not user_record:
-            logger.error("No users found")
-            return None
-
-        # Convert record to dict and parse location JSON
-        user_dict = dict(user_record)
-        user_dict["location"] = json.loads(user_dict["location"])
-
-        return user_dict
-
-    except Exception as error:
-        logger.error(f"Error fetching user: {error}")
-        raise
-
-
 class UserService:
     def __init__(self):
         self.api_service = ApiService()
@@ -94,4 +73,24 @@ class UserService:
 
         except Exception as error:
             logger.error(f"❌ Failed to fetch and store users: {error}")
+            raise
+
+    def get_user(self, switch_index: int) -> Optional[Dict[str, Any]]:
+        """Get user by switch index"""
+        try:
+            query = users_table.select().where(users_table.c.switchInput == switch_index)
+            user_record = database.fetch_one(query)
+
+            if not user_record:
+                logger.error("No users found")
+                return None
+
+            # Convert record to dict and parse location JSON
+            user_dict = dict(user_record)
+            user_dict["location"] = json.loads(user_dict["location"])
+
+            return user_dict
+
+        except Exception as error:
+            logger.error(f"Error fetching user: {error}")
             raise
