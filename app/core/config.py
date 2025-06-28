@@ -16,6 +16,7 @@ class Settings(BaseSettings):
 
     # Application Configuration
     port: int = Field(default=3000, env="PORT")
+    time_on_bulb: int = Field(default=2.0, env="TIME_ON_BULB", ge=0)
     environment: str = Field(default="development", env="ENVIRONMENT")
 
     # GPIO Configuration

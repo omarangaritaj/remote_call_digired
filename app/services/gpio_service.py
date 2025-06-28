@@ -2,9 +2,8 @@
 
 import asyncio
 import os
-import time
 from datetime import datetime
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any
 from loguru import logger
 
 from app.constants.pin_constants import SWITCH_PINS, BULB_PINS
@@ -249,16 +248,18 @@ class GPIOService:
             raise
 
     async def _turn_on_bulb(self, bulb_index: int) -> Dict[str, Any]:
+        bulb = bulb_index + 1
+
         """Turn on bulb for 2 seconds"""
         try:
             if not self.gpio_available:
                 # Simulation mode
-                logger.info(f"🔧 SIMULATION: Bulb {bulb_index + 1} → ON")
+                logger.info(f"🔧 SIMULATION: Bulb {bulb} → ON")
                 await asyncio.sleep(0.1)
-                logger.info(f"💡 SIMULATION: Bulb {bulb_index + 1} illuminated (2s)")
-                await asyncio.sleep(2.0)
-                logger.info(f"🔧 SIMULATION: Bulb {bulb_index + 1} → OFF")
-                return {"simulated": True, "bulb": bulb_index + 1}
+                logger.info(f"💡 SIMULATION: Bulb {bulb} illuminated (2s)")
+                await asyncio.sleep(settings.time_on_bulb)
+                logger.info(f"🔧 SIMULATION: Bulb {bulb} → OFF")
+                return {"simulated": True, "bulb": bulb}
 
             # Hardware mode
             if not GPIO_AVAILABLE:
@@ -267,17 +268,17 @@ class GPIOService:
             pin = BULB_PINS[bulb_index]
 
             GPIO.output(pin, GPIO.HIGH)
-            logger.info(f"💡 HARDWARE: Bulb {bulb_index + 1} → ON (GPIO {pin})")
+            logger.info(f"💡 HARDWARE: Bulb {bulb} → ON (GPIO {pin})")
 
-            await asyncio.sleep(2.0)
+            await asyncio.sleep(settings.time_on_bulb)
 
             GPIO.output(pin, GPIO.LOW)
-            logger.info(f"💡 HARDWARE: Bulb {bulb_index + 1} → OFF (GPIO {pin})")
+            logger.info(f"💡 HARDWARE: Bulb {bulb} → OFF (GPIO {pin})")
 
-            return {"hardware": True, "bulb": bulb_index + 1, "gpio": pin}
+            return {"hardware": True, "bulb": bulb, "gpio": pin}
 
         except Exception as error:
-            logger.error(f"❌ Error controlling bulb {bulb_index + 1}: {error}")
+            logger.error(f"❌ Error controlling bulb {bulb}: {error}")
             return {"error": str(error)}
 
     async def _send_api_request(self, switch_index: int) -> Dict[str, Any]:
