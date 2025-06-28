@@ -1,6 +1,5 @@
 # main.py
 
-import asyncio
 import os
 from contextlib import asynccontextmanager
 
@@ -8,7 +7,7 @@ import uvicorn
 from fastapi import FastAPI
 from loguru import logger
 
-from app.core.config import settings
+from app.core.config import is_prod_env
 from app.core.database import database
 from app.controllers.app_controller import router as app_router
 from app.services.gpio_service import GPIOService
@@ -90,6 +89,6 @@ if __name__ == "__main__":
         "main:app",
         host="0.0.0.0",
         port=port,
-        reload=False,
+        reload=not is_prod_env,
         log_level="info"
     )
