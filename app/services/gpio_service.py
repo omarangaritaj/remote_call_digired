@@ -14,12 +14,14 @@ from app.core.config import settings
 
 try:
     import RPi.GPIO as GPIO
+
     GPIO_AVAILABLE = True
     logger.info("📦 RPi.GPIO library loaded successfully")
 except ImportError:
     GPIO_AVAILABLE = False
     logger.warning("⚠️ RPi.GPIO not available - running in simulation mode")
     logger.info("💡 This is normal on non-Raspberry Pi systems")
+
 
     # Create a mock GPIO class for development
     class MockGPIO:
@@ -30,18 +32,30 @@ except ImportError:
         LOW = 0
         PUD_UP = "PUD_UP"
 
+
         @staticmethod
         def setmode(mode): pass
+
+
         @staticmethod
         def setwarnings(warnings): pass
+
+
         @staticmethod
         def setup(pin, mode, pull_up_down=None): pass
+
+
         @staticmethod
         def input(pin): return 0
+
+
         @staticmethod
         def output(pin, value): pass
+
+
         @staticmethod
         def cleanup(): pass
+
 
     GPIO = MockGPIO()
 
@@ -58,6 +72,7 @@ class GPIOService:
 
         # Monitoring tasks
         self.monitoring_tasks: List[asyncio.Task] = []
+
 
     async def initialize(self) -> None:
         """Initialize GPIO service"""
@@ -83,6 +98,7 @@ class GPIOService:
             logger.warning("🔄 Falling back to simulation mode due to hardware error")
             await self.cleanup()
 
+
     async def _initialize_hardware(self) -> None:
         """Initialize GPIO hardware"""
         if not GPIO_AVAILABLE:
@@ -95,7 +111,7 @@ class GPIOService:
         # Initialize switch pins (input with pull-up)
         for i, pin in enumerate(SWITCH_PINS):
             try:
-                GPIO.setup(pin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+                GPIO.setup(pin, GPIO.IN, pull_up_down = GPIO.PUD_UP)
                 logger.info(f"✅ Switch {i + 1} initialized on GPIO {pin}")
             except Exception as error:
                 logger.error(f"❌ Failed to initialize switch {i + 1} on GPIO {pin}: {error}")
@@ -110,6 +126,7 @@ class GPIOService:
             except Exception as error:
                 logger.error(f"❌ Failed to initialize bulb {i + 1} on GPIO {pin}: {error}")
                 raise
+
 
     async def _check_gpio_availability(self) -> bool:
         """Check if GPIO is available"""
@@ -164,6 +181,7 @@ class GPIOService:
             logger.warning(f"⚠️ GPIO availability check failed: {error}")
             return False
 
+
     def _is_running_in_docker(self) -> bool:
         """Check if running in Docker container"""
         try:
@@ -179,6 +197,7 @@ class GPIOService:
 
         except Exception:
             return False
+
 
     async def start_monitoring(self) -> None:
         """Start GPIO monitoring"""
@@ -200,6 +219,7 @@ class GPIOService:
             self.monitoring_tasks.append(task)
 
         logger.info("✅ HARDWARE MODE: Physical GPIO monitoring active")
+
 
     async def _monitor_switch(self, switch_index: int) -> None:
         """Monitor a specific switch for state changes"""
@@ -224,6 +244,7 @@ class GPIOService:
                 logger.error(f"❌ Error monitoring switch {switch_index + 1}: {error}")
                 break
 
+
     async def handle_switch_press(self, switch_index: int) -> Dict[str, Any]:
         """Handle switch press event"""
         if switch_index <= 0 or switch_index > len(SWITCH_PINS):
@@ -245,9 +266,11 @@ class GPIOService:
 
         except Exception as error:
             logger.error(f"❌ Error handling switch press: {error}")
+            self._turn_on_bulb(switch_index - 1, 0.7)
             raise
 
-    async def _turn_on_bulb(self, bulb_index: int) -> Dict[str, Any]:
+
+    async def _turn_on_bulb(self, bulb_index: int, time_on_bulb: int = settings.time_on_bulb) -> Dict[str, Any]:
         bulb = bulb_index + 1
 
         """Turn on bulb for 2 seconds"""
@@ -257,9 +280,9 @@ class GPIOService:
                 logger.info(f"🔧 SIMULATION: Bulb {bulb} → ON")
                 await asyncio.sleep(0.1)
                 logger.info(f"💡 SIMULATION: Bulb {bulb} illuminated (2s)")
-                await asyncio.sleep(settings.time_on_bulb)
+                await asyncio.sleep(time_on_bulb)
                 logger.info(f"🔧 SIMULATION: Bulb {bulb} → OFF")
-                return {"simulated": True, "bulb": bulb}
+                return {"hardware": False, "bulb": bulb, "gpio": None}
 
             # Hardware mode
             if not GPIO_AVAILABLE:
@@ -270,7 +293,7 @@ class GPIOService:
             GPIO.output(pin, GPIO.HIGH)
             logger.info(f"💡 HARDWARE: Bulb {bulb} → ON (GPIO {pin})")
 
-            await asyncio.sleep(settings.time_on_bulb)
+            await asyncio.sleep(time_on_bulb)
 
             GPIO.output(pin, GPIO.LOW)
             logger.info(f"💡 HARDWARE: Bulb {bulb} → OFF (GPIO {pin})")
@@ -280,6 +303,7 @@ class GPIOService:
         except Exception as error:
             logger.error(f"❌ Error controlling bulb {bulb}: {error}")
             return {"error": str(error)}
+
 
     async def _send_api_request(self, switch_index: int) -> Dict[str, Any]:
         """Send API request for switch press"""
@@ -291,10 +315,10 @@ class GPIOService:
                 return {"error": "No user found"}
 
             payload = SwitchEventPayload(
-                status="calling",
-                branchId=settings.device_id,
-                isMultiService=False,
-                location=UserLocation(**user["location"])
+                status = "calling",
+                branchId = settings.device_id,
+                isMultiService = False,
+                location = UserLocation(**user["location"])
             )
 
             logger.info(f"📡 API: Sending request for switch pin {switch_index} (user: {user['userId']})")
@@ -306,6 +330,7 @@ class GPIOService:
         except Exception as error:
             logger.error(f"❌ API: Failed for switch pin {switch_index}: {error}")
             raise
+
 
     def get_status(self) -> Dict[str, Any]:
         """Get GPIO service status"""
@@ -327,6 +352,7 @@ class GPIOService:
             }
         }
 
+
     async def cleanup(self) -> None:
         """Cleanup GPIO resources"""
         logger.info("🧹 Cleaning up GPIO resources...")
@@ -338,7 +364,7 @@ class GPIOService:
                 task.cancel()
 
         if self.monitoring_tasks:
-            await asyncio.gather(*self.monitoring_tasks, return_exceptions=True)
+            await asyncio.gather(*self.monitoring_tasks, return_exceptions = True)
 
         self.monitoring_tasks.clear()
 
