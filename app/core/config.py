@@ -12,7 +12,7 @@ class Settings(BaseSettings):
     company_id: str = Field(default="", env="COMPANY_ID")
 
     # Database Configuration
-    database_url: str = Field(default="file:./data/dev.db", env="DATABASE_URL")
+    database_url: str = Field(default="sqlite://./data/dev.db", env="DATABASE_URL")
 
     # Application Configuration
     port: int = Field(default=3000, env="PORT")
