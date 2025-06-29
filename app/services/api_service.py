@@ -5,7 +5,7 @@ from loguru import logger
 from typing import Dict, Any
 
 from app.models.models import ApiResponse, SwitchEventPayload
-from app.core.config import settings
+from app.core.config import is_prod_env, settings
 
 
 class ApiService:
@@ -52,7 +52,7 @@ class ApiService:
                 response = await client.post(url, json=payload.model_dump(), headers=headers)
 
                 if response.status_code in [200, 201]:
-                    logger.info("✅ Switch event sent successfully to API")
+                    logger.info("✅ Switch event sent successfully to API") if not is_prod_env else None
                 else:
                     logger.warning(f"⚠️ API responded with status {response.status_code}")
 

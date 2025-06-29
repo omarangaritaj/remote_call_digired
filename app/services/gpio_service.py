@@ -10,7 +10,7 @@ from app.constants.pin_constants import SWITCH_PINS, BULB_PINS
 from app.models.models import SwitchEventPayload, UserLocation
 from app.services.api_service import ApiService
 from app.services.user_service import UserService
-from app.core.config import settings
+from app.core.config import settings, is_prod_env
 
 try:
     import RPi.GPIO as GPIO
@@ -250,7 +250,7 @@ class GPIOService:
         if switch_index <= 0 or switch_index > len(SWITCH_PINS):
             raise ValueError(f"Invalid switch position: {switch_index}")
 
-        logger.info(f"🔘 Switch {switch_index} activated")
+        logger.info(f"🔘 Switch (index: {switch_index}) activated (GPIO {SWITCH_PINS[switch_index - 1]})") if not is_prod_env else None
 
         try:
             # Execute bulb control and API request concurrently
@@ -291,12 +291,12 @@ class GPIOService:
             pin = BULB_PINS[bulb_index]
 
             GPIO.output(pin, GPIO.HIGH)
-            logger.info(f"💡 HARDWARE: Bulb {bulb} → ON (GPIO {pin})")
+            logger.info(f"💡 HARDWARE: Bulb {bulb} → ON (GPIO {pin})") if not is_prod_env else None
 
             await asyncio.sleep(time_on_bulb)
 
             GPIO.output(pin, GPIO.LOW)
-            logger.info(f"💡 HARDWARE: Bulb {bulb} → OFF (GPIO {pin})")
+            logger.info(f"💡 HARDWARE: Bulb {bulb} → OFF (GPIO {pin})") if not is_prod_env else None
 
             return {"hardware": True, "bulb": bulb, "gpio": pin}
 
@@ -324,7 +324,8 @@ class GPIOService:
             logger.info(f"📡 API: Sending request for switch pin {switch_index} (user: {user['userId']})")
             response = await self.api_service.send_switch_event(payload, user["accessToken"])
 
-            logger.info(f"✅ API: Request completed for switch pin {switch_index}")
+            logger.info(f"✅ API: Request completed for switch pin {switch_index} (GPIO {SWITCH_PINS[switch_index]})"
+                        ) if not is_prod_env else None
             return response.get("data", response)
 
         except Exception as error:
