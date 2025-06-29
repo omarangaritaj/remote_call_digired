@@ -18,7 +18,7 @@ services:
       - COMPANY_ID=${COMPANY_ID}
       - DATABASE_URL=${DATABASE_URL}
       - DEVICE_ID=${DEVICE_ID}
-      - ENVIRONMENT=production
+      - ENVIRONMENT=${ENVIRONMENT}
       - PORT=${PORT}
       - TIME_ON_BULB=${TIME_ON_BULB}
     restart: always
