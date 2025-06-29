@@ -244,6 +244,156 @@ Restart=always
 WantedBy=multi-user.target
 ```
 
+# Conexiones GPIO para Raspberry Pi 4B
+
+## PINES PARA SWITCHES (Entradas)
+
+Según `SWITCH_PINS = [3, 4, 17, 27, 22]`:
+
+| Switch | GPIO BCM | Pin Físico | Conexión |
+|--------|----------|------------|----------|
+| Switch 1 | GPIO 3 | Pin 5 | Conectar switch entre Pin 5 y GND |
+| Switch 2 | GPIO 4 | Pin 7 | Conectar switch entre Pin 7 y GND |
+| Switch 3 | GPIO 17 | Pin 11 | Conectar switch entre Pin 11 y GND |
+| Switch 4 | GPIO 27 | Pin 13 | Conectar switch entre Pin 13 y GND |
+| Switch 5 | GPIO 22 | Pin 15 | Conectar switch entre Pin 15 y GND |
+
+## PINES PARA BULBOS/LEDs (Salidas)
+
+Según `BULB_PINS = [18, 23, 24, 25, 8]`:
+
+| Bulbo | GPIO BCM | Pin Físico | Conexión |
+|-------|----------|------------|----------|
+| Bulbo 1 | GPIO 18 | Pin 12 | LED/Bulbo + resistencia a GND |
+| Bulbo 2 | GPIO 23 | Pin 16 | LED/Bulbo + resistencia a GND |
+| Bulbo 3 | GPIO 24 | Pin 18 | LED/Bulbo + resistencia a GND |
+| Bulbo 4 | GPIO 25 | Pin 22 | LED/Bulbo + resistencia a GND |
+| Bulbo 5 | GPIO 8 | Pin 24 | LED/Bulbo + resistencia a GND |
+
+## PINES DE ALIMENTACIÓN DISPONIBLES
+
+- **3.3V**: Pines 1, 17
+- **5V**: Pines 2, 4
+- **GND (Tierra)**: Pines 6, 9, 14, 20, 25, 30, 34, 39
+
+## ESQUEMA DE CONEXIÓN
+
+### Para cada Switch:
+```
+Pin GPIO → Switch → Pin GND
+```
+
+### Para cada LED/Bulbo:
+```
+Pin GPIO → Resistencia (220Ω-1kΩ) → LED → Pin GND
+```
+
+## DIAGRAMA VISUAL COMPLETO
+
+```
+Raspberry Pi 4B GPIO Layout Completo
+=====================================
+
+     3.3V [ 1] [ 2] 5V
+   GPIO 2 [ 3] [ 4] 5V
+   GPIO 3 [ 5] [ 6] GND          ←─ Switches GND
+   GPIO 4 [ 7] [ 8] GPIO 14
+      GND [ 9] [10] GPIO 15
+  GPIO 17 [11] [12] GPIO 18      ←─ Bulbo 1
+  GPIO 27 [13] [14] GND          ←─ LEDs GND
+  GPIO 22 [15] [16] GPIO 23      ←─ Bulbo 2
+     3.3V [17] [18] GPIO 24      ←─ Bulbo 3
+  GPIO 10 [19] [20] GND
+   GPIO 9 [21] [22] GPIO 25      ←─ Bulbo 4
+  GPIO 11 [23] [24] GPIO 8       ←─ Bulbo 5
+      GND [25] [26] GPIO 7
+   GPIO 0 [27] [28] GPIO 1
+   GPIO 5 [29] [30] GND
+   GPIO 6 [31] [32] GPIO 12
+  GPIO 13 [33] [34] GND
+  GPIO 19 [35] [36] GPIO 16
+  GPIO 26 [37] [38] GPIO 20
+      GND [39] [40] GPIO 21
+
+PINES UTILIZADOS:
+==================
+SWITCHES (Entradas):
+- Switch 1: GPIO 3  (Pin 5) 
+- Switch 2: GPIO 4  (Pin 7)   
+- Switch 3: GPIO 17 (Pin 11)
+- Switch 4: GPIO 27 (Pin 13)
+- Switch 5: GPIO 22 (Pin 15)
+
+BULBOS/LEDs (Salidas):
+- Bulbo 1: GPIO 18 (Pin 12)
+- Bulbo 2: GPIO 23 (Pin 16)
+- Bulbo 3: GPIO 24 (Pin 18)
+- Bulbo 4: GPIO 25 (Pin 22)
+- Bulbo 5: GPIO 8  (Pin 24)
+
+ALIMENTACIÓN DISPONIBLE:
+- 3.3V: Pines 1, 17
+- 5V:   Pines 2, 4
+- GND:  Pines 6, 9, 14, 20, 25, 30, 34, 39
+```
+
+## COMPONENTES RECOMENDADOS
+
+### Para Switches:
+- **Botones pulsadores (Push buttons)**
+- **Switches táctiles**
+- **Micro switches**
+
+### Para Bulbos/LEDs:
+- **LEDs estándar**: Resistencia 220Ω - 1kΩ
+- **LEDs de alta potencia**: Usar transistores o MOSFETs
+- **Bulbos reales**: Usar módulos de relé (5V o 3.3V)
+
+## NOTAS IMPORTANTES
+
+1. **Configuración de Switches**: El código usa `pull_up_down=GPIO.PUD_UP`, por lo que detecta cuando el switch se presiona (va de HIGH a LOW)
+
+2. **Resistencias para LEDs**: Usa resistencias apropiadas:
+   - LEDs rojos: 220Ω
+   - LEDs azules/blancos: 330Ω-1kΩ
+   - Ajusta según el voltaje y corriente de tu LED
+
+3. **Bulbos de alta potencia**: Si usas bulbos reales en lugar de LEDs, necesitarás:
+   - Módulos de relé para cargas AC
+   - Transistores/MOSFETs para cargas DC de alta corriente
+
+4. **GND común**: Todos los switches y LEDs deben compartir el mismo GND
+
+5. **Protección**: Considera agregar resistencias pull-up/pull-down adicionales si experimentas rebotes en los switches
+
+## CÓDIGO DE REFERENCIA
+
+Tu configuración actual en el código:
+
+```python
+# Pin constants
+SWITCH_PINS = [3, 4, 17, 27, 22]  # GPIO BCM numbers
+BULB_PINS = [18, 23, 24, 25, 8]   # GPIO BCM numbers
+
+# GPIO setup for switches (inputs with pull-up)
+GPIO.setup(pin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+
+# GPIO setup for bulbs (outputs, initially LOW)
+GPIO.setup(pin, GPIO.OUT)
+GPIO.output(pin, GPIO.LOW)
+```
+
+## PRUEBAS
+
+Una vez conectado, puedes probar tu configuración:
+
+1. **Modo Hardware**: Los switches físicos activarán los bulbos
+2. **Modo Simulación**: Usa el endpoint `GET /test/switch/{1-5}` para simular presiones de switches
+
+---
+
+**⚠️ Advertencia**: Siempre desconecta la alimentación de la Raspberry Pi antes de hacer cambios en las conexiones GPIO.
+
 ## 📄 Licencia
 
 Este proyecto está bajo la licencia MIT.
