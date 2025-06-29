@@ -321,15 +321,15 @@ class GPIOService:
                 location = UserLocation(**user["location"])
             )
 
-            logger.info(f"📡 API: Sending request for switch pin {switch_index} (user: {user['userId']})")
+            logger.info(f"📡 API: Sending request for switch index:{switch_index} (user: {user['userId']})") if not is_prod_env else None
             response = await self.api_service.send_switch_event(payload, user["accessToken"])
 
-            logger.info(f"✅ API: Request completed for switch pin {switch_index} (GPIO {SWITCH_PINS[switch_index]})"
+            logger.info(f"✅ API: Request completed for switch index:{switch_index} (GPIO {SWITCH_PINS[switch_index]})"
                         ) if not is_prod_env else None
             return response.get("data", response)
 
         except Exception as error:
-            logger.error(f"❌ API: Failed for switch pin {switch_index}: {error}")
+            logger.error(f"❌ API: Failed for switch index:{switch_index}: {error}")
             raise
 
 
