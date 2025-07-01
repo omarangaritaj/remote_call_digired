@@ -5,7 +5,7 @@ from contextlib import asynccontextmanager
 
 import uvicorn
 from fastapi import FastAPI
-from loguru import logger
+from app.utils.logger_service import logger
 
 from app.core.config import is_prod_env
 from app.core.database import database

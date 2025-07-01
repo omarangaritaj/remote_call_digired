@@ -2,7 +2,7 @@
 
 import json
 from typing import Optional, Dict, Any
-from loguru import logger
+from app.utils.logger_service import logger
 
 from app.core.database import database, users_table
 from app.services.api_service import ApiService

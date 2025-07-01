@@ -1,7 +1,7 @@
 # app/services/api_service.py
 
 import httpx
-from loguru import logger
+from app.utils.logger_service import logger
 from typing import Dict, Any
 
 from app.models.models import ApiResponse, SwitchEventPayload

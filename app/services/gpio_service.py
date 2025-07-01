@@ -4,7 +4,7 @@ import asyncio
 import os
 from datetime import datetime
 from typing import List, Dict, Any
-from loguru import logger
+from app.utils.logger_service import logger
 
 from app.constants.pin_constants import SWITCH_PINS, BULB_PINS
 from app.models.models import SwitchEventPayload, UserLocation
