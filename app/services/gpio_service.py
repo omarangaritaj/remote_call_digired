@@ -325,15 +325,11 @@ class GPIOService:
             response = await self.api_service.send_switch_event(payload, user["accessToken"])
 
             print('\n', response, '\n') if not is_prod_env else None
-            print('\n', response.data, '\n') if not is_prod_env else None
 
-            logger.info(f"✅ API: Request completed for switch index:{switch_index} (GPIO {SWITCH_PINS[switch_index]})"
-                        ) if not is_prod_env else None
-            return response.get("data", response)
+            return response
 
         except Exception as error:
-            logger.error(f"❌ API: Failed for switch index:{switch_index}: {error}")
-            raise
+            logger.error(f"❌ API: Failed for switch index:{switch_index}: {error}", backtrace = True)
 
 
     def get_status(self) -> Dict[str, Any]:
