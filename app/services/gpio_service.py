@@ -324,6 +324,9 @@ class GPIOService:
             logger.info(f"📡 API: Sending request for switch index:{switch_index} (user: {user['userId']})") if not is_prod_env else None
             response = await self.api_service.send_switch_event(payload, user["accessToken"])
 
+            print('\n', response, '\n') if not is_prod_env else None
+            print('\n', response.data, '\n') if not is_prod_env else None
+
             logger.info(f"✅ API: Request completed for switch index:{switch_index} (GPIO {SWITCH_PINS[switch_index]})"
                         ) if not is_prod_env else None
             return response.get("data", response)
