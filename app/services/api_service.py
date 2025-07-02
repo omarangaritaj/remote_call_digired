@@ -13,7 +13,7 @@ class ApiService:
         self.api_url = settings.api_url
         self.api_endpoint = settings.api_endpoint
         self.device_id = settings.device_id
-        self.user_agent = f"RaspberryPi-GPIO-Controller-FastAPI/1.0/{self.device_id}"
+        self.user_agent = f"RaspberryPi-GPIO-Controller/1.0/{self.device_id}"
         self.timeout = httpx.Timeout(30.0)
 
     async def fetch_users(self) -> ApiResponse:

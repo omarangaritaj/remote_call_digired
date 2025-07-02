@@ -1,6 +1,7 @@
 # app/services/user_service.py
 
 import json
+from pprint import pprint
 from typing import Optional, Dict, Any
 from app.utils.logger_service import logger
 
@@ -68,7 +69,12 @@ class UserService:
             if not is_prod_env:
                 logger.warning("🔒 Sensitive data not logged in production environment")
                 all_users = database.fetch_all(users_table.select())
-                print("All users in database:", all_users)
+                print('\n' + '-' * 40 + '\n')
+                for user in all_users:
+                    user_dict = {key: value for key, value in user._mapping.items()}
+                    pprint(user_dict)
+                    print('\n' + '-' * 40 + '\n')
+
                 logger.warning("🔒 Sensitive data not logged in production environment")
 
         except Exception as error:

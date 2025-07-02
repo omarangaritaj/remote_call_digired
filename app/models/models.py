@@ -36,7 +36,6 @@ class User(BaseModel):
     accessToken: str
     switchInput: int
     createdAt: Optional[datetime] = None
-    updatedAt: Optional[datetime] = None
 
 
 class ApplicationInfo(BaseModel):

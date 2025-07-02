@@ -24,7 +24,6 @@ users_table = Table(
     Column("accessToken", String, nullable=False),
     Column("switchInput", Integer, nullable=False),
     Column("createdAt", DateTime, default=func.now()),
-    Column("updatedAt", DateTime, default=func.now(), onupdate=func.now()),
 )
 
 class Database:
