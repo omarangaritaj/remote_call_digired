@@ -242,7 +242,6 @@ class GPIOService:
 
             except Exception as error:
                 logger.error(f"❌ Error monitoring switch {switch_index + 1}: {error}")
-                break
 
 
     async def handle_switch_press(self, switch_index: int) -> Dict[str, Any]:
@@ -259,10 +258,15 @@ class GPIOService:
 
             bulb_result, api_result = await asyncio.gather(bulb_task, api_task)
 
-            return {
+            response = {
                 "turnOnBulb": bulb_result,
                 "sendApiRequest": api_result
             }
+
+            if not is_prod_env:
+                print('\n', response, '\n')
+
+            return response
 
         except Exception as error:
             logger.error(f"❌ Error handling switch press: {error}")
@@ -323,8 +327,6 @@ class GPIOService:
 
             logger.info(f"📡 API: Sending request for switch index:{switch_index} (user: {user['userId']})") if not is_prod_env else None
             response = await self.api_service.send_switch_event(payload, user["accessToken"])
-
-            print('\n', response, '\n') if not is_prod_env else None
 
             return response
 
